@@ -21,8 +21,16 @@ internal static class RepoPath
             }
         }
 
-        foreach (string segment in target.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string raw in target.Split('/', StringSplitOptions.RemoveEmptyEntries))
         {
+            // Decode first, or %2e%2e survives here and Uri collapses it into a traversal later.
+            string segment = Uri.UnescapeDataString(raw);
+
+            if (segment.Contains('/', StringComparison.Ordinal) || segment.Contains('\\', StringComparison.Ordinal))
+            {
+                return null;
+            }
+
             switch (segment)
             {
                 case ".":

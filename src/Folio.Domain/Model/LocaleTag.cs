@@ -30,7 +30,7 @@ public readonly record struct LocaleTag
 
         for (int i = 1; i < subtags.Length; i++)
         {
-            if (subtags[i].Length == 0)
+            if (!IsSubtag(subtags[i]))
             {
                 return false;
             }
@@ -62,6 +62,10 @@ public readonly record struct LocaleTag
 
     private static bool IsLanguage(string subtag) =>
         subtag.Length is >= 2 and <= 8 && subtag.All(char.IsAsciiLetter);
+
+    // BCP-47 subtags are alphanumeric; anything else must not reach the ETag or a header value.
+    private static bool IsSubtag(string subtag) =>
+        subtag.Length is >= 1 and <= 8 && subtag.All(char.IsAsciiLetterOrDigit);
 
     private static string Canonicalize(string subtag, int index)
     {
