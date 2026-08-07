@@ -12,7 +12,7 @@ public sealed class RefreshGateTests
         TaskCompletionSource held = new(TaskCreationOptions.RunContinuationsAsynchronously);
         int rebuilds = 0;
 
-        async Task<int> Rebuild(CancellationToken token)
+        async Task<int> Rebuild()
         {
             _ = Interlocked.Increment(ref rebuilds);
             await held.Task;
@@ -20,7 +20,7 @@ public sealed class RefreshGateTests
         }
 
         Task<int>[] callers =
-            [.. Enumerable.Range(0, 4).Select(_ => gate.RunAsync(CancellationToken.None, Rebuild))];
+            [.. Enumerable.Range(0, 4).Select(_ => gate.RunAsync(Rebuild))];
 
         held.SetResult();
         int[] results = await Task.WhenAll(callers);
@@ -30,15 +30,41 @@ public sealed class RefreshGateTests
     }
 
     [Test]
+    public async Task A_Caller_Cancelling_Its_Wait_Does_Not_Cancel_The_Rebuild()
+    {
+        RefreshGate gate = new();
+        TaskCompletionSource held = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int completed = 0;
+
+        async Task<int> Rebuild()
+        {
+            await held.Task;
+            return Interlocked.Increment(ref completed);
+        }
+
+        using CancellationTokenSource leaving = new();
+        Task<int> caller = gate.RunAsync(Rebuild).WaitAsync(leaving.Token);
+
+        // The caller gives up waiting; the rebuild it started must still run to completion.
+        leaving.Cancel();
+        await Assert.That(async () => await caller).Throws<OperationCanceledException>();
+
+        held.SetResult();
+        int result = await gate.RunAsync(Rebuild);
+
+        await Assert.That(result).IsEqualTo(1);
+    }
+
+    [Test]
     public async Task A_Rebuild_After_The_Last_One_Finished_Starts_Fresh()
     {
         RefreshGate gate = new();
         int rebuilds = 0;
 
-        Task<int> Rebuild(CancellationToken token) => Task.FromResult(Interlocked.Increment(ref rebuilds));
+        Task<int> Rebuild() => Task.FromResult(Interlocked.Increment(ref rebuilds));
 
-        _ = await gate.RunAsync(CancellationToken.None, Rebuild);
-        _ = await gate.RunAsync(CancellationToken.None, Rebuild);
+        _ = await gate.RunAsync(Rebuild);
+        _ = await gate.RunAsync(Rebuild);
 
         await Assert.That(rebuilds).IsEqualTo(2);
     }

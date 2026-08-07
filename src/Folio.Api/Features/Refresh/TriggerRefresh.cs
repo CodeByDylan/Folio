@@ -32,6 +32,7 @@ internal sealed class Handler(
     RefreshGate gate,
     FolioMetrics metrics,
     IOptionsMonitor<RefreshOptions> options,
+    IHostApplicationLifetime lifetime,
     TimeProvider clock,
     ILogger<Handler> logger) : IHandler<Request, Response>
 {
@@ -39,24 +40,25 @@ internal sealed class Handler(
         typeof(Handler).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
         ?? "0.0.0";
 
+    // The rebuild runs under application lifetime, so a caller disconnecting only abandons its own wait.
     public Task<Result<Response>> HandleAsync(Request request, CancellationToken cancellationToken) =>
-        gate.RunAsync(cancellationToken, GuardedAsync);
+        gate.RunAsync(GuardedAsync).WaitAsync(cancellationToken);
 
     // The timer and the endpoint share this, so neither can rebuild without a limit.
-    private async Task<Result<Response>> GuardedAsync(CancellationToken cancellationToken)
+    private async Task<Result<Response>> GuardedAsync()
     {
         TimeSpan limit = options.CurrentValue.Timeout;
         long started = clock.GetTimestamp();
 
         using CancellationTokenSource elapsed = new(limit, clock);
         using CancellationTokenSource timeout =
-            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, elapsed.Token);
+            CancellationTokenSource.CreateLinkedTokenSource(lifetime.ApplicationStopping, elapsed.Token);
 
         try
         {
             return await RunAsync(timeout.Token);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (elapsed.IsCancellationRequested)
         {
             return Abandon(
                 FolioIngestionErrors.Transient(new TimeoutException($"The refresh exceeded {limit}.")),
@@ -100,11 +102,12 @@ internal sealed class Handler(
 
         try
         {
-            await store.WriteAsync(fetched.Value.Inputs, cancellationToken);
+            // The snapshot is already published, so the write is best-effort and must not be cancelled
+            // by the timeout — a cancellation here would otherwise record a live refresh as abandoned.
+            await store.WriteAsync(fetched.Value.Inputs, CancellationToken.None);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (Exception exception)
         {
-            // The snapshot is already published, so a store that breaks its contract must not undo that.
             RefreshLog.StoreWriteFailed(logger, exception);
         }
 

@@ -7,12 +7,11 @@ internal sealed class RefreshGate
 
     private Task? _running;
 
-    /// <summary>Runs a rebuild under the starter's token, or awaits the one already in flight.</summary>
+    /// <summary>Starts a rebuild, or returns the one already in flight; the caller awaits it under its own token.</summary>
     /// <typeparam name="T">What a rebuild produces.</typeparam>
-    /// <param name="cancellationToken">Governs the run only when this caller starts it.</param>
-    /// <param name="rebuild">Starts a rebuild.</param>
+    /// <param name="rebuild">Starts a rebuild, governed by its own token, not the caller's.</param>
     /// <returns>The result of this rebuild or of the one it joined.</returns>
-    public Task<T> RunAsync<T>(CancellationToken cancellationToken, Func<CancellationToken, Task<T>> rebuild)
+    public Task<T> RunAsync<T>(Func<Task<T>> rebuild)
     {
         ArgumentNullException.ThrowIfNull(rebuild);
 
@@ -23,7 +22,7 @@ internal sealed class RefreshGate
                 return inflight;
             }
 
-            Task<T> started = rebuild(cancellationToken);
+            Task<T> started = rebuild();
             _running = started;
 
             return started;
