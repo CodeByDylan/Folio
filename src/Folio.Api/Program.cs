@@ -42,7 +42,10 @@ builder.Services.AddFolioIngestion(provider =>
             github.CentralRepository,
             github.CentralRef,
             refresh.FetchConcurrency,
-            refresh.MinimumRateLimitBudget),
+            refresh.MinimumRateLimitBudget,
+            refresh.MaxFileBytes,
+            refresh.MaxFileCount,
+            refresh.MaxTotalBytes),
         store.Mode is SnapshotStoreMode.Redis ? SnapshotStoreKind.Redis : SnapshotStoreKind.File,
         store.FilePath,
         store.RedisConnectionString);

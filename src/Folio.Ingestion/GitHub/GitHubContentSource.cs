@@ -15,11 +15,17 @@ namespace Folio.Ingestion.GitHub;
 /// <param name="CentralRef">The branch, tag or SHA to read the central config from.</param>
 /// <param name="FetchConcurrency">How many requests may be in flight at once.</param>
 /// <param name="MinimumRateLimitBudget">The remaining budget below which a fetch will not start.</param>
+/// <param name="MaxFileBytes">The largest single file that will be fetched.</param>
+/// <param name="MaxFileCount">The most files that will be fetched from one repository.</param>
+/// <param name="MaxTotalBytes">The most bytes that will be fetched from one repository.</param>
 public sealed record FetchSettings(
     string CentralRepository,
     string? CentralRef,
     int FetchConcurrency,
-    int MinimumRateLimitBudget);
+    int MinimumRateLimitBudget,
+    int MaxFileBytes,
+    int MaxFileCount,
+    long MaxTotalBytes);
 
 /// <summary>An assembled input set and what assembling it found.</summary>
 /// <param name="Inputs">The inputs a build can run over.</param>
@@ -248,13 +254,35 @@ public sealed class GitHubContentSource(
 
             string folioRoot = ProjectLocation.FolioRoot(path);
 
-            List<TreeItem> wanted =
+            List<TreeItem> matched =
             [
                 .. tree.Tree.Where(item =>
                     item.Type.Value == TreeType.Blob
                     && (item.Path.StartsWith(folioRoot + "/", StringComparison.Ordinal)
                         || (includeReadme && ProjectLocation.IsReadme(item.Path, path)))),
             ];
+
+            // Repository content is third-party, so a file is measured against the caps before it is pulled.
+            List<TreeItem> wanted = [];
+            long total = 0;
+
+            foreach (TreeItem item in matched.OrderBy(item => item.Path, StringComparer.Ordinal))
+            {
+                // Over-size files are dropped from the set; a declared one then surfaces as media/content missing.
+                if (item.Size > settings.MaxFileBytes)
+                {
+                    continue;
+                }
+
+                if (wanted.Count >= settings.MaxFileCount || total + item.Size > settings.MaxTotalBytes)
+                {
+                    return FolioIngestionErrors.ContentFault(
+                        $"'{repo}' exceeds the fetch budget ({settings.MaxFileCount} files / {settings.MaxTotalBytes} bytes).");
+                }
+
+                wanted.Add(item);
+                total += item.Size;
+            }
 
             Dictionary<string, ReadOnlyMemory<byte>> files = new(StringComparer.Ordinal);
 

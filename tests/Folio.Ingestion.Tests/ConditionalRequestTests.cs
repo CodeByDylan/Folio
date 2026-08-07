@@ -114,7 +114,8 @@ public sealed class ConditionalRequestTests
         Result<FetchResult> result = await new GitHubContentSource(
             stub.ConditionalClient(cache),
             new StubMediaProbe(),
-            new FetchSettings("dutchy/portfolio", CentralRef: null, FetchConcurrency: 4, MinimumRateLimitBudget: 100),
+            new FetchSettings("dutchy/portfolio", CentralRef: null, FetchConcurrency: 4, MinimumRateLimitBudget: 100,
+                MaxFileBytes: int.MaxValue, MaxFileCount: int.MaxValue, MaxTotalBytes: long.MaxValue),
             NullLogger<GitHubContentSource>.Instance)
             .FetchAsync(previous: null, CancellationToken.None);
 

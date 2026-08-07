@@ -312,15 +312,33 @@ public sealed class GitHubContentSourceTests
         return result.IsSuccess ? result.Value : throw new InvalidOperationException(result.Error.Message);
     }
 
+    [Test]
+    public async Task A_File_Over_The_Size_Cap_Is_Not_Fetched()
+    {
+        GitHubStub stub = Central("[[projects]]\nrepo = \"folio\"\n")
+            .Repo("dutchy/folio", new()
+            {
+                [".folio/project.toml"] = "version = 1\n",
+                [".folio/content/en/huge.md"] = new string('x', 4096),
+            });
+
+        Result<FetchResult> result = await Run(stub, maxFileBytes: 1024);
+
+        await Assert.That(result.Value.Inputs.Repos[0].Files.Paths).DoesNotContain(".folio/content/en/huge.md");
+        await Assert.That(result.Value.Inputs.Repos[0].Files.Paths).Contains(".folio/project.toml");
+    }
+
     private static async Task<Result<FetchResult>> Run(
         GitHubStub stub,
         int minimumBudget = 100,
         StubMediaProbe? probe = null,
-        StoredInputs? previous = null) =>
+        StoredInputs? previous = null,
+        int maxFileBytes = int.MaxValue) =>
         await new GitHubContentSource(
             stub.Client(),
             probe ?? new StubMediaProbe(),
-            new FetchSettings("dutchy/portfolio", CentralRef: null, FetchConcurrency: 4, minimumBudget),
+            new FetchSettings("dutchy/portfolio", CentralRef: null, FetchConcurrency: 4, minimumBudget,
+                MaxFileBytes: maxFileBytes, MaxFileCount: int.MaxValue, MaxTotalBytes: long.MaxValue),
             NullLogger<GitHubContentSource>.Instance)
             .FetchAsync(previous, CancellationToken.None);
 }

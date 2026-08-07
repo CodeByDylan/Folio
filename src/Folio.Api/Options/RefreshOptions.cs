@@ -23,4 +23,16 @@ public sealed class RefreshOptions
     /// <summary>Gets the remaining request budget below which a rebuild will not start.</summary>
     [Range(0, 5000)]
     public int MinimumRateLimitBudget { get; init; } = 500;
+
+    /// <summary>Gets the largest single file that will be fetched from a repository.</summary>
+    [Range(1024, 104_857_600)]
+    public int MaxFileBytes { get; init; } = 5 * 1024 * 1024;
+
+    /// <summary>Gets the most files that will be fetched from one repository.</summary>
+    [Range(1, 100_000)]
+    public int MaxFileCount { get; init; } = 2000;
+
+    /// <summary>Gets the most bytes that will be fetched from one repository.</summary>
+    [Range(1024, 1_073_741_824)]
+    public long MaxTotalBytes { get; init; } = 64 * 1024 * 1024;
 }

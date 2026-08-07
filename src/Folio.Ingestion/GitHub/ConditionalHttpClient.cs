@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Net;
 using Octokit;
 using Octokit.Internal;
@@ -14,29 +13,50 @@ internal sealed record CachedResponse(string ETag, object? Body, string ContentT
 /// <summary>Remembers the last response for a URL, so it can be revalidated instead of re-fetched.</summary>
 public sealed class EtagCache(int capacity = 512)
 {
-    private readonly ConcurrentDictionary<string, CachedResponse> _entries = new(StringComparer.Ordinal);
-    private readonly ConcurrentQueue<string> _order = new();
+    private readonly Dictionary<string, CachedResponse> _entries = new(StringComparer.Ordinal);
+    private readonly Queue<string> _order = new();
+    private readonly Lock _gate = new();
 
     /// <summary>Gets how many responses are held.</summary>
-    public int Count => _entries.Count;
+    public int Count
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _entries.Count;
+            }
+        }
+    }
 
-    internal bool TryGet(string key, out CachedResponse entry) => _entries.TryGetValue(key, out entry!);
+    internal bool TryGet(string key, out CachedResponse entry)
+    {
+        lock (_gate)
+        {
+            return _entries.TryGetValue(key, out entry!);
+        }
+    }
 
     internal void Set(string key, CachedResponse entry)
     {
-        if (_entries.TryAdd(key, entry))
+        // A refresh writes only a handful of entries, so serializing insert and eviction costs nothing
+        // and keeps the queue and the dictionary in step; a lock-free version orphans keys under a race.
+        lock (_gate)
         {
-            _order.Enqueue(key);
-        }
-        else
-        {
-            _entries[key] = entry;
-        }
+            if (_entries.TryAdd(key, entry))
+            {
+                _order.Enqueue(key);
+            }
+            else
+            {
+                _entries[key] = entry;
+            }
 
-        // Tree keys carry a commit SHA, so the key space grows without a bound of its own.
-        while (_entries.Count > capacity && _order.TryDequeue(out string? oldest))
-        {
-            _ = _entries.TryRemove(oldest, out _);
+            // Tree keys carry a commit SHA, so the key space grows without a bound of its own.
+            while (_entries.Count > capacity && _order.TryDequeue(out string? oldest))
+            {
+                _ = _entries.Remove(oldest);
+            }
         }
     }
 }
