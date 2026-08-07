@@ -21,6 +21,7 @@ public static class StoredInputsSerializer
 
         return JsonSerializer.SerializeToUtf8Bytes(
             new Payload(
+                FormatVersion,
                 inputs.CentralRepo,
                 inputs.CentralSha,
                 Files(inputs.Central),
@@ -46,7 +47,7 @@ public static class StoredInputsSerializer
         {
             Payload? payload = JsonSerializer.Deserialize<Payload>(json, Options);
 
-            if (payload is null)
+            if (payload is null || payload.Version != FormatVersion)
             {
                 return null;
             }
@@ -58,7 +59,8 @@ public static class StoredInputsSerializer
 
             if (payload.Repos.Any(repo =>
                 repo is null or { Repo: null } or { Path: null } or { PinnedSha: null }
-                    or { Files: null } or { Metadata: null } or { MediaSizes: null }))
+                    or { Files: null } or { Metadata: null } or { MediaSizes: null }
+                    || !IsComplete(repo.Metadata)))
             {
                 return null;
             }
@@ -101,7 +103,21 @@ public static class StoredInputsSerializer
     private static FileSet Set(Dictionary<string, byte[]> files) =>
         new(files.Select(file => new KeyValuePair<string, ReadOnlyMemory<byte>>(file.Key, file.Value)));
 
+    // The reflection deserializer does not enforce non-nullable reference members, so a skewed or
+    // tampered blob can leave these null; check them so a bad file becomes "no snapshot", not an NRE.
+    private static bool IsComplete(RepoMetadata metadata) =>
+        metadata is
+        {
+            Owner: not null, Name: not null, Topics: not null,
+            Languages: not null, Releases: not null,
+        }
+        && metadata.Releases.All(release => release is { TagName: not null, Url: not null })
+        && metadata.Languages.All(language => language.Name is not null);
+
+    private const int FormatVersion = 1;
+
     private sealed record Payload(
+        int Version,
         string? CentralRepo,
         string? CentralSha,
         Dictionary<string, byte[]>? Central,

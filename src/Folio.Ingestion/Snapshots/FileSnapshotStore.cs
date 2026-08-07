@@ -5,26 +5,30 @@ namespace Folio.Ingestion.Snapshots;
 /// <summary>Keeps the last successful build's inputs in a local file.</summary>
 public sealed class FileSnapshotStore(string path, ILogger<FileSnapshotStore> logger) : ISnapshotStore
 {
+    // A relative path resolves against the application base, not the launch directory, so the durable
+    // copy lands in the same place however the process was started.
+    private readonly string _path = Path.IsPathRooted(path) ? path : Path.Combine(AppContext.BaseDirectory, path);
+
     /// <inheritdoc />
     public async Task<StoredInputs?> ReadAsync(CancellationToken cancellationToken)
     {
-        if (!File.Exists(path))
+        if (!File.Exists(_path))
         {
             return null;
         }
 
         try
         {
-            return StoredInputsSerializer.Deserialize(await File.ReadAllBytesAsync(path, cancellationToken));
+            return StoredInputsSerializer.Deserialize(await File.ReadAllBytesAsync(_path, cancellationToken));
         }
         catch (IOException exception)
         {
-            SnapshotStoreLog.ReadFailed(logger, path, exception);
+            SnapshotStoreLog.ReadFailed(logger, _path, exception);
             return null;
         }
         catch (UnauthorizedAccessException exception)
         {
-            SnapshotStoreLog.ReadFailed(logger, path, exception);
+            SnapshotStoreLog.ReadFailed(logger, _path, exception);
             return null;
         }
     }
@@ -34,18 +38,25 @@ public sealed class FileSnapshotStore(string path, ILogger<FileSnapshotStore> lo
     {
         ArgumentNullException.ThrowIfNull(inputs);
 
-        string directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
-        string temporary = path + ".tmp";
+        string directory = Path.GetDirectoryName(_path)!;
+        string temporary = _path + ".tmp";
 
         try
         {
             _ = Directory.CreateDirectory(directory);
-            await File.WriteAllBytesAsync(temporary, StoredInputsSerializer.Serialize(inputs), cancellationToken);
-            File.Move(temporary, path, overwrite: true);
+
+            // Flush to disk before the rename, so a power loss cannot leave the file present but empty.
+            await using (FileStream stream = new(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                await stream.WriteAsync(StoredInputsSerializer.Serialize(inputs), cancellationToken);
+                stream.Flush(flushToDisk: true);
+            }
+
+            File.Move(temporary, _path, overwrite: true);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            SnapshotStoreLog.WriteFailed(logger, path, exception);
+            SnapshotStoreLog.WriteFailed(logger, _path, exception);
         }
     }
 }

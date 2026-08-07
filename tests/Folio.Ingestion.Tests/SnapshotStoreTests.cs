@@ -40,9 +40,56 @@ public sealed class SnapshotStoreTests
     }
 
     [Test]
+    public async Task Media_Paths_Survive()
+    {
+        StoredInputs? restored = StoredInputsSerializer.Deserialize(StoredInputsSerializer.Serialize(Inputs()));
+
+        await Assert.That(restored!.Repos[0].MediaPaths).Contains(".folio/media/hero.png");
+    }
+
+    [Test]
     public async Task Unreadable_Bytes_Deserialize_To_Nothing_Rather_Than_Throwing()
     {
         await Assert.That(StoredInputsSerializer.Deserialize("{ not json"u8)).IsNull();
+    }
+
+    [Test]
+    public async Task A_Blob_Of_The_Wrong_Format_Version_Is_Rejected()
+    {
+        byte[] bytes = StoredInputsSerializer.Serialize(Inputs());
+        string json = System.Text.Encoding.UTF8.GetString(bytes).Replace("\"version\":1", "\"version\":999", StringComparison.Ordinal);
+
+        await Assert.That(StoredInputsSerializer.Deserialize(System.Text.Encoding.UTF8.GetBytes(json))).IsNull();
+    }
+
+    [Test]
+    public async Task A_Blob_With_A_Null_Release_Url_Is_Rejected_Not_An_NRE()
+    {
+        byte[] bytes = StoredInputsSerializer.Serialize(WithRelease());
+        string json = System.Text.Encoding.UTF8.GetString(bytes)
+            .Replace("\"url\":\"https://example.com/v1\"", "\"url\":null", StringComparison.Ordinal);
+
+        await Assert.That(StoredInputsSerializer.Deserialize(System.Text.Encoding.UTF8.GetBytes(json))).IsNull();
+    }
+
+    private static StoredInputs WithRelease()
+    {
+        StoredInputs baseline = Inputs();
+        RepoInput repo = baseline.Repos[0];
+
+        return baseline with
+        {
+            Repos =
+            [
+                repo with
+                {
+                    Metadata = repo.Metadata with
+                    {
+                        Releases = [new RepoRelease("v1", "One", DateTimeOffset.UnixEpoch, new Uri("https://example.com/v1"), false)],
+                    },
+                },
+            ],
+        };
     }
 
     [Test]

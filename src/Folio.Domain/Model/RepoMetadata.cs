@@ -32,6 +32,7 @@ public sealed record RepoMetadata(
     IReadOnlyList<RepoRelease> Releases)
 {
     /// <summary>Gets the language breakdown with each language's share of the total.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public IReadOnlyList<LanguageShare> LanguageShares
     {
         get
