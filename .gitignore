@@ -206,6 +206,9 @@ PublishScripts/
 !**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
+# Test fixtures are content; a fixture directory named "packages" is not a NuGet cache.
+!tests/**/fixtures/**
+
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
