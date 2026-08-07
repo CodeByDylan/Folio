@@ -7,6 +7,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>latest</LangVersion>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAuditLevel>low</NuGetAuditLevel>

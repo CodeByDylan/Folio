@@ -133,7 +133,7 @@ internal sealed class ProjectConfigParser
             && span[4] == '-'
             && !span[..4].ContainsAnyExceptInRange('0', '9')
             && !span[5..].ContainsAnyExceptInRange('0', '9')
-            && int.Parse(span[5..]) is >= 1 and <= 12;
+            && int.Parse(span[5..], System.Globalization.CultureInfo.InvariantCulture) is >= 1 and <= 12;
     }
 
     private static List<LinkEntry> ReadLinks(TomlDocumentReader document, DiagnosticSink sink)

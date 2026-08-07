@@ -477,7 +477,10 @@ public sealed class GitHubContentSource(
         header.CopyTo(buffer, 0);
         contents.Span.CopyTo(buffer.AsSpan(header.Length));
 
+        // A git blob is addressed by SHA-1; this must match git, so the algorithm is not a choice.
+#pragma warning disable CA5350
         return Convert.ToHexStringLower(System.Security.Cryptography.SHA1.HashData(buffer));
+#pragma warning restore CA5350
     }
 
     private sealed record RepoContents(

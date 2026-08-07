@@ -1,6 +1,6 @@
 root = true
 
-# Formatting and code style for Loom. This file — not AGENTS.md — is the authority
+# Formatting and code style for Folio. This file — not AGENTS.md — is the authority
 # on style. `dotnet format` fixes violations; CI fails on any remaining difference.
 # If you want to change how code looks, change it here, not in prose.
 
@@ -98,3 +98,21 @@ dotnet_naming_style.underscore_camel.capitalization = camel_case
 [tests/**/*.cs]
 # Test method names are prose, not identifiers: Returns_Failure_When_Value_Is_Null.
 dotnet_naming_rule.types_are_pascal_case.severity = none
+
+# Analyzer triage — the security and correctness rules stay on; these fight deliberate design.
+[*.cs]
+# Internal methods return read-only interfaces to signal immutability, not the concrete collection.
+dotnet_diagnostic.CA1859.severity = none
+# The resolver and parsers are used as instances (new X().Method()) by design, not static helpers.
+dotnet_diagnostic.CA1822.severity = none
+# 'pointer' is the project's ubiquitous term for an RFC 6901 JSON Pointer, not the CLR Pointer type.
+dotnet_diagnostic.CA1720.severity = none
+
+[tests/**/*.cs]
+# Test names are full sentences with underscores, by the repo's testing convention.
+dotnet_diagnostic.CA1707.severity = none
+# Perf micro-optimisations not worth pursuing in test fixtures.
+dotnet_diagnostic.CA1826.severity = none
+dotnet_diagnostic.CA1832.severity = none
+# The stub reproduces git's SHA-1 blob hash to match production.
+dotnet_diagnostic.CA5350.severity = none

@@ -7,7 +7,7 @@ namespace Folio.Api.Infrastructure;
 /// <summary>Traces, metrics and logs.</summary>
 internal static class Telemetry
 {
-    /// <summary>The meter and activity source name every Folio instrument is published under.</summary>
+    /// <summary>The meter name every Folio instrument is published under.</summary>
     public const string SourceName = "Folio";
 
     /// <summary>Adds OpenTelemetry and resilient outbound HTTP.</summary>
@@ -30,7 +30,6 @@ internal static class Telemetry
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation())
             .WithTracing(tracing => tracing
-                .AddSource(SourceName)
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation());
 
