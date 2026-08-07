@@ -241,6 +241,10 @@ Routes map into a group carrying `RequireAuthorization()`, with the four reads m
 still correct: forgetting `AllowAnonymous` gives an obvious 401 in development, while forgetting to
 protect an admin endpoint is silent and permanent.
 
-Rate limiting (fixed window, per IP) and CORS are configured in `Program.cs`, never per-slice. CORS
-origins come from configuration and **not** from `site.url` — configuration arriving from a repository
-someone else could edit must not decide security policy.
+Rate limiting (fixed window, per IP) and CORS are configured in `Program.cs`, never per-slice. The IP is
+the socket peer, which behind a reverse proxy or CDN is the proxy, collapsing every client into one
+partition; set `Api:TrustForwardedHeaders` when a trusted proxy fronts the service, and the limiter
+then partitions on `X-Forwarded-For`. It is off by default, because trusting that header from a direct
+client would let anyone forge their address and evade the limit. CORS origins come from configuration
+and **not** from `site.url` — configuration arriving from a repository someone else could edit must not
+decide security policy.

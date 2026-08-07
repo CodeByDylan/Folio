@@ -129,7 +129,8 @@ internal sealed class Handler(
             new CentralInput(previous.CentralRepo, previous.CentralSha, previous.Central),
             previous.Repos,
             Version,
-            clock.GetUtcNow());
+            // Stamp the capture time, not now, so BuiltAt / Last-Modified / snapshot age tell the truth.
+            previous.CapturedAt);
 
         if (resolved.IsSuccess)
         {

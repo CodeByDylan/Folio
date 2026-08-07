@@ -48,7 +48,7 @@ internal sealed class RefreshService(
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             RefreshServiceLog.Faulted(logger, exception);
-            Abandon($"The refresh failed unexpectedly: {exception.Message}", started);
+            Abandon($"The refresh failed unexpectedly ({exception.GetType().Name}).", started);
         }
     }
 

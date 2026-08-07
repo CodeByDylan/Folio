@@ -14,6 +14,8 @@ namespace Folio.Api.Infrastructure;
 /// <summary>Maps every route.</summary>
 internal static class FolioEndpoints
 {
+    private static readonly string[] GetHead = ["GET", "HEAD"];
+
     /// <summary>Maps the versioned API.</summary>
     /// <param name="routes">The group to map into.</param>
     /// <returns>The same group.</returns>
@@ -21,7 +23,7 @@ internal static class FolioEndpoints
     {
         ArgumentNullException.ThrowIfNull(routes);
 
-        _ = routes.MapGet("/site", static async (
+        _ = routes.MapMethods("/site", GetHead, static async (
             [FromQuery] string? locale,
             ISnapshotProvider snapshots,
             IHandler<Site.Request, Site.Response> handler,
@@ -31,7 +33,7 @@ internal static class FolioEndpoints
             .AllowAnonymous()
             .WithName("GetSite");
 
-        _ = routes.MapGet("/projects", static async (
+        _ = routes.MapMethods("/projects", GetHead, static async (
             [FromQuery] string? locale,
             ISnapshotProvider snapshots,
             IHandler<Projects.ListProjects.Request, Projects.ListProjects.Response> handler,
@@ -42,7 +44,7 @@ internal static class FolioEndpoints
             .AllowAnonymous()
             .WithName("ListProjects");
 
-        _ = routes.MapGet("/projects/{slug}", static async (
+        _ = routes.MapMethods("/projects/{slug}", GetHead, static async (
             string slug,
             [FromQuery] string? locale,
             ISnapshotProvider snapshots,

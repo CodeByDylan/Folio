@@ -148,6 +148,7 @@ public sealed class GitHubContentSource(
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
                     // Metadata for a repo whose tree already listed; a fault here says nothing about it.
+                    IngestionLog.Transient(logger, exception);
                     lock (transient)
                     {
                         transient.Add((pair.index, FolioIngestionErrors.Transient(exception)));
@@ -208,6 +209,7 @@ public sealed class GitHubContentSource(
         }
         catch (Exception exception)
         {
+            IngestionLog.Transient(logger, exception);
             return FolioIngestionErrors.Transient(exception);
         }
     }
@@ -313,9 +315,13 @@ public sealed class GitHubContentSource(
         }
         catch (Exception exception)
         {
-            return GitHubFault.Classify(exception) is GitHubFaultKind.Content
-                ? FolioIngestionErrors.ContentFault($"'{repo}' could not be read: {exception.Message}")
-                : FolioIngestionErrors.Transient(exception);
+            if (GitHubFault.Classify(exception) is GitHubFaultKind.Content)
+            {
+                return FolioIngestionErrors.ContentFault($"'{repo}' could not be read: {exception.Message}");
+            }
+
+            IngestionLog.Transient(logger, exception);
+            return FolioIngestionErrors.Transient(exception);
         }
     }
 
@@ -485,4 +491,7 @@ internal static partial class IngestionLog
 {
     [LoggerMessage(Level = LogLevel.Information, Message = "Fetched {Fetched} of {Listed} listed projects.")]
     public static partial void Fetched(ILogger logger, int fetched, int listed);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "A transient fault abandoned the fetch.")]
+    public static partial void Transient(ILogger logger, Exception exception);
 }

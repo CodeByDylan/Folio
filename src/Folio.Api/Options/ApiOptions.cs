@@ -27,4 +27,7 @@ public sealed class ApiOptions
     /// <summary>Gets how long a client may reuse a content response before revalidating.</summary>
     [Range(typeof(TimeSpan), "00:00:00", "01:00:00")]
     public TimeSpan CacheMaxAge { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>Gets whether to read the client address from <c>X-Forwarded-For</c>; enable only behind a trusted proxy.</summary>
+    public bool TrustForwardedHeaders { get; init; }
 }

@@ -71,9 +71,29 @@ public sealed class RefreshDiagnosticsTests
 
         HttpStatusCode refreshed = await app.RefreshAsync(client);
         using HttpResponseMessage projects = await client.GetAsync(new Uri("/v1/projects", UriKind.Relative));
+        using HttpResponseMessage diagnostics = await client.GetAsync(new Uri("/v1/diagnostics", UriKind.Relative));
+        using JsonDocument report = JsonDocument.Parse(await diagnostics.Content.ReadAsStringAsync());
 
         await Assert.That(refreshed).IsEqualTo(HttpStatusCode.ServiceUnavailable);
         await Assert.That(projects.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        // BuiltAt reflects when the served inputs were captured, not this boot.
+        await Assert.That(report.RootElement.GetProperty("builtAt").GetDateTimeOffset())
+            .IsEqualTo(DateTimeOffset.UnixEpoch);
+    }
+
+    [Test]
+    public async Task An_Abandoned_Refresh_Does_Not_Leak_Raw_Exception_Text()
+    {
+        const string secret = "internal-host-9000.corp.local";
+        using FolioApp app = new(null, FolioIngestionErrors.Transient(new HttpRequestException(secret)));
+        HttpClient client = app.CreateClient();
+
+        _ = await app.RefreshAsync(client);
+        using HttpResponseMessage diagnostics = await client.GetAsync(new Uri("/v1/diagnostics", UriKind.Relative));
+        string body = await diagnostics.Content.ReadAsStringAsync();
+
+        await Assert.That(body).DoesNotContain(secret);
     }
 
     [Test]

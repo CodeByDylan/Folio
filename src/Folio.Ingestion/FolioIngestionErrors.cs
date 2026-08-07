@@ -56,9 +56,10 @@ public static class FolioIngestionErrors
     {
         ArgumentNullException.ThrowIfNull(exception);
 
+        // The type name is safe on the anonymous endpoint; the message can carry hosts or paths.
         return Errors.Unavailable(
             "folio.ingestion.transient",
-            $"GitHub could not be read: {exception.Message}");
+            $"GitHub could not be read ({exception.GetType().Name}).");
     }
 
     /// <summary>Creates the failure for too little API budget to finish a refresh.</summary>

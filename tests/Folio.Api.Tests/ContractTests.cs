@@ -58,6 +58,21 @@ public sealed class ContractTests
     }
 
     [Test]
+    public async Task A_Head_Request_Is_Accepted_And_Carries_The_Validators()
+    {
+        // The route accepts HEAD (a plain GET-only route would 405); Kestrel drops the body in production.
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        using HttpRequestMessage request = new(HttpMethod.Head, "/v1/site");
+        using HttpResponseMessage response = await client.SendAsync(request);
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+        await Assert.That(response.Headers.ETag).IsNotNull();
+        await Assert.That(response.Content.Headers.LastModified).IsNotNull();
+    }
+
+    [Test]
     public async Task A_Wildcard_If_None_Match_Is_304()
     {
         using FolioApp app = new(FolioApp.WorkedExample());

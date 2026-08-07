@@ -7,6 +7,7 @@ using Folio.Ingestion.GitHub;
 using Loom.Handlers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
@@ -113,7 +114,23 @@ builder.Services.ConfigureHttpJsonOptions(json =>
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
+builder.Services.Configure<ForwardedHeadersOptions>(forwarded =>
+{
+    forwarded.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    // The immediate proxy is trusted by deployment; without clearing these the default single-hop
+    // restriction drops the header inside most container networks.
+    forwarded.KnownIPNetworks.Clear();
+    forwarded.KnownProxies.Clear();
+});
+
 WebApplication app = builder.Build();
+
+// So the rate limiter partitions on the real client, not the proxy — only when a proxy is trusted.
+if (app.Services.GetRequiredService<IOptions<ApiOptions>>().Value.TrustForwardedHeaders)
+{
+    app.UseForwardedHeaders();
+}
 
 // Without these an unhandled exception is a bodyless 500 and an unmatched route a bodyless 404.
 app.UseExceptionHandler();
