@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>The .folio format: model, parsers and resolver. Pure and synchronous.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Folio.Domain.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CodeByDylan.Loom.Results" />
+        <PackageReference Include="Markdig" />
+        <PackageReference Include="Tomlyn" />
+    </ItemGroup>
+
+</Project>
