@@ -82,6 +82,21 @@ public sealed class LocaleTableFormTests
     }
 
     [Test]
+    public async Task An_Empty_Locale_File_Does_Not_Suppress_Locale_Empty()
+    {
+        IReadOnlyList<Diagnostic> diagnostics = Portfolio.Valid("\"en\", \"nl\"")
+            .Project("dutchy/a", new()
+            {
+                [".folio/project.toml"] = "version = 1\n\n[project]\nslug = \"a\"\n",
+                [".folio/locales/nl.toml"] = "\n",
+            })
+            .Diagnostics();
+
+        await Assert.That(diagnostics.Select(diagnostic => diagnostic.Code))
+            .Contains(DiagnosticCodes.LocaleEmpty);
+    }
+
+    [Test]
     public async Task Central_Content_Counts_Against_An_Empty_Locale()
     {
         IReadOnlyList<Diagnostic> diagnostics = Portfolio.Valid("\"en\", \"nl\"")

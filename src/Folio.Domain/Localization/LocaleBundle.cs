@@ -80,7 +80,11 @@ internal sealed class LocaleBundle
                 }
             }
 
-            bundles[locale] = new LocaleBundle(locale, strings.ToFrozenDictionary(StringComparer.Ordinal));
+            // A file with no usable keys is no content, so it must not suppress locale.empty.
+            if (strings.Count > 0)
+            {
+                bundles[locale] = new LocaleBundle(locale, strings.ToFrozenDictionary(StringComparer.Ordinal));
+            }
         }
 
         return bundles;

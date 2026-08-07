@@ -33,6 +33,14 @@ internal sealed class RelationGraph
                     continue;
                 }
 
+                if (target.Equals(slug))
+                {
+                    sinkFor(slug).Warning(
+                        DiagnosticCodes.RelationsTargetUnknown,
+                        $"Relation target '{relation.Target}' is the project itself; the relation was dropped.");
+                    continue;
+                }
+
                 graph.Add(slug, relation.Type, target, generated: false);
                 graph.Add(target, RelationVocabulary.Invert(relation.Type), slug, generated: true);
             }
@@ -47,7 +55,9 @@ internal sealed class RelationGraph
     public IEnumerable<(RelationType Type, Slug Target, bool Generated)> For(Slug slug) =>
         _edges.TryGetValue(slug, out List<(RelationType, Slug, bool)>? edges)
             ? edges
-                .Distinct()
+                // A declared edge and its generated twin (only companion, which is self-inverse) collapse to one.
+                .GroupBy(edge => (edge.Item1, edge.Item2))
+                .Select(group => group.OrderBy(edge => edge.Item3).First())
                 .OrderBy(edge => edge.Item3)
                 .ThenBy(edge => edge.Item1)
                 .ThenBy(edge => edge.Item2.Value, StringComparer.Ordinal)
