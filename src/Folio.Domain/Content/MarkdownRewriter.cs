@@ -30,14 +30,26 @@ internal sealed class MarkdownRewriter(SitePath site)
         .UsePreciseSourceLocation()
         .Build();
 
-    /// <summary>Rewrites one section file.</summary>
+    /// <summary>Rewrites one section file, or returns null when the markdown cannot be parsed.</summary>
     /// <param name="source">The file's markdown.</param>
     /// <param name="context">Where the file came from.</param>
     /// <param name="sink">A sink scoped to the file.</param>
-    /// <returns>The title and the rewritten body.</returns>
-    public RewrittenMarkdown Rewrite(string source, MarkdownContext context, DiagnosticSink sink)
+    /// <returns>The title and the rewritten body, or null if the file is unparseable.</returns>
+    public RewrittenMarkdown? Rewrite(string source, MarkdownContext context, DiagnosticSink sink)
     {
-        MarkdownDocument document = Markdown.Parse(source, Pipeline);
+        MarkdownDocument document;
+
+        try
+        {
+            document = Markdown.Parse(source, Pipeline);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Markdig throws past its nesting depth rather than reporting it; that section is unusable.
+            sink.Warning(DiagnosticCodes.MarkdownUnparseable, $"The markdown could not be parsed: {exception.Message}");
+            return null;
+        }
+
         List<Edit> edits = [];
 
         string? title = TakeTitle(document, source, edits, sink);

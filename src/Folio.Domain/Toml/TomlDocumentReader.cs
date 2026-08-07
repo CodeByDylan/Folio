@@ -57,7 +57,18 @@ internal sealed class TomlDocumentReader
             return false;
         }
 
-        DocumentSyntax syntax = SyntaxParser.Parse(text, sourceName: string.Empty, validate: true);
+        DocumentSyntax syntax;
+
+        try
+        {
+            syntax = SyntaxParser.Parse(text, sourceName: string.Empty, validate: true);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Tomlyn throws past its nesting depth rather than reporting it; that is a broken file.
+            sink.Error(unparseableCode, $"The file could not be parsed: {exception.Message}");
+            return false;
+        }
 
         if (syntax.HasErrors)
         {

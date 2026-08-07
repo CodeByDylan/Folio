@@ -142,6 +142,7 @@ the slug derived from its directory, since it has no `project.toml` to declare o
 
 | Code | Severity | Behaviour |
 | --- | --- | --- |
+| `markdown.unparseable` | warning | A section's markdown could not be parsed; the section is dropped from that locale |
 | `markdown.html_stripped` | warning | Raw HTML removed at parse |
 | `markdown.link_unresolved` | warning | A relative link that escapes the repo or matches no section; left unrewritten |
 | `markdown.fragment_dropped` | warning | A link to a sibling section carried a fragment; the section anchor replaced it |

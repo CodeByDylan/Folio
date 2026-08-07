@@ -69,10 +69,15 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
             return null;
         }
 
-        RewrittenMarkdown rewritten = rewriter.Rewrite(
+        RewrittenMarkdown? rewritten = rewriter.Rewrite(
             Encoding.UTF8.GetString(contents.Span),
             context(path),
             sink.ForFile(path));
+
+        if (rewritten is null)
+        {
+            return null;
+        }
 
         bool fallback = !requested.Equals(defaultLocale);
 
@@ -121,7 +126,14 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
                     .GroupBy(sibling => $"{folioRoot}/content/{locale.Value}/{sibling.File}", StringComparer.Ordinal)
                     .ToDictionary(group => group.Key, group => group.First().Id, StringComparer.Ordinal),
             };
-            RewrittenMarkdown rewritten = rewriter.Rewrite(source, ctx, file);
+            RewrittenMarkdown? rewritten = rewriter.Rewrite(source, ctx, file);
+
+            if (rewritten is null)
+            {
+                // Unparseable in this locale; fall through the chain as if the file were absent.
+                atRequestedLocale = false;
+                continue;
+            }
 
             if (!atRequestedLocale)
             {

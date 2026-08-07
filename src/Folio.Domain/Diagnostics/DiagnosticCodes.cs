@@ -96,6 +96,9 @@ public static class DiagnosticCodes
     /// <summary>A section body carries a second H1 after its title.</summary>
     public const string SectionBodyH1 = "section.body_h1";
 
+    /// <summary>A section's markdown could not be parsed.</summary>
+    public const string MarkdownUnparseable = "markdown.unparseable";
+
     /// <summary>Raw HTML was removed from a section body.</summary>
     public const string MarkdownHtmlStripped = "markdown.html_stripped";
 

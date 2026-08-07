@@ -190,6 +190,6 @@ public sealed class MarkdownRewriterTests
         DiagnosticSink sink = new();
         MarkdownRewriter rewriter = new(new SitePath(new Uri(siteUrl)));
 
-        return (rewriter.Rewrite(source, Context, sink), sink);
+        return (rewriter.Rewrite(source, Context, sink)!, sink);
     }
 }

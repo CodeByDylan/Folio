@@ -170,6 +170,9 @@ public sealed class DiagnosticCoverageTests
 
         [DiagnosticCodes.SectionBodyH1] = () => Section("# One\n\n# Two\n\nProse.\n"),
 
+        [DiagnosticCodes.MarkdownUnparseable] = () =>
+            Section("# S\n\n" + new string('>', 200) + " deep\n"),
+
         [DiagnosticCodes.MarkdownHtmlStripped] = () => Section("# S\n\nText <b>bold</b>.\n"),
 
         [DiagnosticCodes.MarkdownLinkUnresolved] = () => Section("# S\n\n[x](./nope.md)\n"),
