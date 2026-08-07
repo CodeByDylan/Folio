@@ -1,0 +1,7 @@
+project.name    = "Folio"
+project.tagline = "Portfolio's samengesteld uit de repos die ze beschrijven"
+
+link.demo = "Demo bekijken"
+
+media.hero.alt      = "Het Folio-dashboard met drie projecten"
+media.hero_dark.alt = "Het Folio-dashboard in donkere modus"
