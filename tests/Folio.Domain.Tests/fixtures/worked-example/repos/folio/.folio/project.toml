@@ -1,0 +1,28 @@
+version = 1
+
+[project]
+slug    = "folio"
+status  = "active"
+role    = "author"
+started = "2026-03"
+tags    = ["rust", "cli"]
+
+[project.media]
+hero      = ".folio/media/hero.png"
+hero_dark = ".folio/media/hero-dark.png"
+
+[[links]]
+type = "demo"
+url  = "https://folio.example.com"
+
+[[relations]]
+type   = "uses"
+target = "folio-core"
+
+[[sections]]
+id   = "overview"
+file = "overview.md"
+
+[[sections]]
+id   = "architecture"
+file = "architecture.md"

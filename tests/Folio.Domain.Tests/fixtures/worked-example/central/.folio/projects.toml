@@ -1,0 +1,13 @@
+version = 1
+
+[[projects]]
+repo     = "folio"
+featured = true
+
+[[projects]]
+repo = "folio-core"
+
+[[projects]]
+repo = "dutchy/tooling"
+path = "packages/cli"
+ref  = "v2.1.0"

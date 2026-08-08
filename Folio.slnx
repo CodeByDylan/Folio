@@ -1,0 +1,13 @@
+<Solution>
+    <Folder Name="/src/">
+        <Project Path="src/Folio.Domain/Folio.Domain.csproj"/>
+        <Project Path="src/Folio.Ingestion/Folio.Ingestion.csproj"/>
+        <Project Path="src/Folio.Api/Folio.Api.csproj"/>
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/Folio.Domain.Tests/Folio.Domain.Tests.csproj"/>
+        <Project Path="tests/Folio.Ingestion.Tests/Folio.Ingestion.Tests.csproj"/>
+        <Project Path="tests/Folio.Api.Tests/Folio.Api.Tests.csproj"/>
+        <Project Path="tests/Folio.ArchitectureTests/Folio.ArchitectureTests.csproj"/>
+    </Folder>
+</Solution>

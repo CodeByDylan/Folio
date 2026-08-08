@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../src/Folio.Api/Folio.Api.csproj" />
+        <ProjectReference Include="../../src/Folio.Domain/Folio.Domain.csproj" />
+        <ProjectReference Include="../../src/Folio.Ingestion/Folio.Ingestion.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="TUnit" />
+        <PackageReference Include="NetArchTest.Rules" />
+    </ItemGroup>
+
+</Project>

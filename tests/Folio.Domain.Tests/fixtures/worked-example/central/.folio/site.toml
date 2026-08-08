@@ -1,0 +1,15 @@
+version = 1
+
+[site]
+url            = "https://dutchy.dev"
+default_locale = "en"
+locales        = ["en", "nl"]
+owner          = "dutchy"
+
+[[site.links]]
+type = "github"
+url  = "https://github.com/dutchy"
+
+[[site.sections]]
+id   = "about"
+file = "about.md"

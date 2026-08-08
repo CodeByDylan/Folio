@@ -1,0 +1,10 @@
+site.title   = "Dutchy"
+site.tagline = "Things I have built"
+
+link.github = "GitHub"
+
+tag.rust = "Rust"
+tag.cli  = "Command-line tools"
+
+relation.uses    = "Uses"
+relation."used-by" = "Used by"

@@ -1,0 +1,49 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+        <LoomVersion>0.3.2</LoomVersion>
+    </PropertyGroup>
+
+    <ItemGroup Label="Loom">
+        <PackageVersion Include="CodeByDylan.Loom.Results" Version="$(LoomVersion)" />
+        <PackageVersion Include="CodeByDylan.Loom.Results.AspNetCore" Version="$(LoomVersion)" />
+        <PackageVersion Include="CodeByDylan.Loom.Handlers" Version="$(LoomVersion)" />
+        <PackageVersion Include="CodeByDylan.Loom.Handlers.Abstractions" Version="$(LoomVersion)" />
+    </ItemGroup>
+
+    <ItemGroup Label="Application">
+        <PackageVersion Include="Tomlyn" Version="2.10.1" />
+        <PackageVersion Include="Markdig" Version="0.42.0" />
+        <PackageVersion Include="Octokit" Version="14.0.0" />
+        <PackageVersion Include="StackExchange.Redis" Version="2.13.1" />
+        <PackageVersion Include="Scalar.AspNetCore" Version="2.16.16" />
+    </ItemGroup>
+
+    <ItemGroup Label="Extensions">
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+        <!-- Pinned above the 2.0.0 that Microsoft.AspNetCore.OpenApi drags in: GHSA-v5pm-xwqc-g5wc. -->
+        <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
+        <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.8.0" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.10" />
+    </ItemGroup>
+
+    <ItemGroup Label="Observability">
+        <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
+        <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
+        <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
+        <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
+        <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.17.0" />
+    </ItemGroup>
+
+    <ItemGroup Label="Tests">
+        <PackageVersion Include="TUnit" Version="1.63.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.10.0" />
+        <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+        <PackageVersion Include="Testcontainers.Redis" Version="4.13.0" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>All I/O: GitHub access, the snapshot store, media probing.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Folio.Ingestion.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Folio.Domain/Folio.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CodeByDylan.Loom.Results" />
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Options" />
+        <PackageReference Include="Octokit" />
+        <PackageReference Include="StackExchange.Redis" />
+    </ItemGroup>
+
+</Project>

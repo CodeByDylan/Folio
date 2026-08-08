@@ -1,0 +1,284 @@
+{
+  "url": "https://dutchy.dev",
+  "defaultLocale": "en",
+  "locales": [
+    "en",
+    "nl"
+  ],
+  "links": [
+    {
+      "type": "GitHub",
+      "url": "https://github.com/dutchy",
+      "label": {
+        "value": "GitHub",
+        "locale": "en",
+        "isFallback": false
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "about",
+      "title": {
+        "value": "About",
+        "locale": "en",
+        "isFallback": false
+      },
+      "body": {
+        "value": "I build things.\n\n![Me](https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/me.png)",
+        "locale": "en",
+        "isFallback": false
+      },
+      "source": "Folio"
+    }
+  ],
+  "projects": [
+    {
+      "slug": "folio",
+      "repo": "dutchy/folio",
+      "isFeatured": true,
+      "name": {
+        "value": "Folio",
+        "locale": "en",
+        "isFallback": false
+      },
+      "tagline": {
+        "value": "Portfolios assembled from the repos they describe",
+        "locale": "en",
+        "isFallback": false
+      },
+      "status": "Active",
+      "role": "Author",
+      "started": "2026-03",
+      "ended": null,
+      "tags": [
+        {
+          "id": "rust",
+          "kind": "Language",
+          "label": {
+            "value": "Rust",
+            "locale": "en",
+            "isFallback": false
+          }
+        },
+        {
+          "id": "cli",
+          "kind": "Domain",
+          "label": {
+            "value": "Command-line tools",
+            "locale": "en",
+            "isFallback": false
+          }
+        }
+      ],
+      "links": [
+        {
+          "type": "Demo",
+          "url": "https://folio.example.com/",
+          "label": {
+            "value": "Live demo",
+            "locale": "en",
+            "isFallback": false
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "Uses",
+          "target": "folio-core",
+          "label": {
+            "value": "Uses",
+            "locale": "en",
+            "isFallback": false
+          },
+          "isGenerated": false
+        }
+      ],
+      "media": [
+        {
+          "role": "hero",
+          "url": "https://raw.githubusercontent.com/dutchy/folio/abc123/.folio/media/hero.png",
+          "width": null,
+          "height": null,
+          "alt": {
+            "value": "The Folio dashboard showing three projects",
+            "locale": "en",
+            "isFallback": false
+          }
+        },
+        {
+          "role": "hero_dark",
+          "url": "https://raw.githubusercontent.com/dutchy/folio/abc123/.folio/media/hero-dark.png",
+          "width": null,
+          "height": null,
+          "alt": {
+            "value": "The Folio dashboard in dark mode",
+            "locale": "en",
+            "isFallback": false
+          }
+        }
+      ],
+      "sections": [
+        {
+          "id": "overview",
+          "title": {
+            "value": "Overview",
+            "locale": "en",
+            "isFallback": false
+          },
+          "body": {
+            "value": "Folio reads two sources: GitHub metadata, and files you commit yourself.\n\n![The parsing pipeline](https://raw.githubusercontent.com/dutchy/folio/abc123/.folio/media/hero.png)\n\nSee the [architecture](#architecture) for how resolution works,\nor [folio-core](/projects/folio-core) for the parser itself.",
+            "locale": "en",
+            "isFallback": false
+          },
+          "source": "Folio"
+        },
+        {
+          "id": "architecture",
+          "title": {
+            "value": "Architecture",
+            "locale": "en",
+            "isFallback": false
+          },
+          "body": {
+            "value": "Two phases: per project, then portfolio-wide.",
+            "locale": "en",
+            "isFallback": false
+          },
+          "source": "Folio"
+        }
+      ],
+      "languages": [
+        {
+          "name": "Rust",
+          "bytes": 900,
+          "percent": 87.1
+        },
+        {
+          "name": "Shell",
+          "bytes": 100,
+          "percent": 9.7
+        },
+        {
+          "name": "Markdown",
+          "bytes": 33,
+          "percent": 3.2
+        }
+      ]
+    },
+    {
+      "slug": "folio-core",
+      "repo": "dutchy/folio-core",
+      "isFeatured": false,
+      "name": {
+        "value": "Folio Core",
+        "locale": "en",
+        "isFallback": false
+      },
+      "tagline": null,
+      "status": "Active",
+      "role": null,
+      "started": null,
+      "ended": null,
+      "tags": [],
+      "links": [],
+      "relations": [
+        {
+          "type": "UsedBy",
+          "target": "folio",
+          "label": {
+            "value": "Used by",
+            "locale": "en",
+            "isFallback": false
+          },
+          "isGenerated": true
+        }
+      ],
+      "media": [],
+      "sections": [],
+      "languages": [
+        {
+          "name": "Rust",
+          "bytes": 900,
+          "percent": 87.1
+        },
+        {
+          "name": "Shell",
+          "bytes": 100,
+          "percent": 9.7
+        },
+        {
+          "name": "Markdown",
+          "bytes": 33,
+          "percent": 3.2
+        }
+      ]
+    },
+    {
+      "slug": "cli",
+      "repo": "dutchy/tooling",
+      "isFeatured": false,
+      "name": {
+        "value": "Tooling CLI",
+        "locale": "en",
+        "isFallback": false
+      },
+      "tagline": {
+        "value": "One repo, several packages",
+        "locale": "en",
+        "isFallback": false
+      },
+      "status": "Maintenance",
+      "role": null,
+      "started": null,
+      "ended": null,
+      "tags": [
+        {
+          "id": "cli",
+          "kind": "Domain",
+          "label": {
+            "value": "Command-line tools",
+            "locale": "en",
+            "isFallback": false
+          }
+        }
+      ],
+      "links": [],
+      "relations": [],
+      "media": [],
+      "sections": [
+        {
+          "id": "usage",
+          "title": {
+            "value": "Usage",
+            "locale": "en",
+            "isFallback": false
+          },
+          "body": {
+            "value": "Run it.",
+            "locale": "en",
+            "isFallback": false
+          },
+          "source": "Folio"
+        }
+      ],
+      "languages": [
+        {
+          "name": "Rust",
+          "bytes": 900,
+          "percent": 87.1
+        },
+        {
+          "name": "Shell",
+          "bytes": 100,
+          "percent": 9.7
+        },
+        {
+          "name": "Markdown",
+          "bytes": 33,
+          "percent": 3.2
+        }
+      ]
+    }
+  ]
+}
