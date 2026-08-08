@@ -1,0 +1,15 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
+        <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
+    </PropertyGroup>
+</Project>

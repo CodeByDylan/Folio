@@ -1,0 +1,5 @@
+version = 1
+
+[project]
+slug   = "folio-core"
+status = "active"

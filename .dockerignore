@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/TestResults/
+.git/
+.github/
+.idea/
+.vs/
+tests/
+docs/
+*.md
+Folio.slnx
+commitlint.config.mjs
+renovate.json
+fly.toml
+Dockerfile
+.dockerignore
+**/*.user

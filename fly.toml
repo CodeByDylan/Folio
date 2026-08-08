@@ -1,0 +1,48 @@
+app = "folio"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  ASPNETCORE_HTTP_PORTS = "8080"
+  # Fly's proxy terminates TLS and forwards the caller, so rate limiting partitions per client.
+  Api__TrustForwardedHeaders = "true"
+  SnapshotStore__Mode = "File"
+  SnapshotStore__FilePath = "/data/folio-inputs.json"
+
+# Keeps the last successful inputs across restarts, so a boot with GitHub down still serves.
+[[mounts]]
+  source = "folio_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # The refresher runs on a timer, so a stopped machine stops rebuilding.
+  auto_stop_machines = "off"
+  auto_start_machines = false
+  min_machines_running = 1
+
+  # Gates load-balancer traffic: unhealthy until the first snapshot is built.
+  [[http_service.checks]]
+    path = "/ready"
+    method = "GET"
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "5m"
+
+# Machine-level liveness: answers as long as the process serves HTTP, so a failure means restart.
+[checks]
+  [checks.alive]
+    type = "http"
+    port = 8080
+    path = "/alive"
+    method = "GET"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
