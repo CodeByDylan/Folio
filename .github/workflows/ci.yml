@@ -38,3 +38,46 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build
+
+  image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: folio:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # The image builds long before it can serve; only starting it proves the runtime is complete.
+      - name: Smoke test
+        run: |
+          docker run -d --name folio-ci -p 8080:8080 \
+            -e GitHub__Token=ci \
+            -e GitHub__CentralRepository=ci/ci \
+            -e Api__RefreshKey=0123456789abcdef0123456789abcdef \
+            folio:ci
+
+          for _ in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/alive || true)
+
+            if [ "$code" = "200" ]; then
+              echo "alive"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "The container never answered /alive."
+          docker logs folio-ci
+          exit 1
