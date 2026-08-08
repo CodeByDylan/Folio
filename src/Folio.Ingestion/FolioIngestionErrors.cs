@@ -34,7 +34,7 @@ public static class FolioIngestionErrors
     /// <returns>An error that ends the refresh and is not a passing condition.</returns>
     public static Error CentralUnparseable(string repo, string reason) => Errors.Invalid(
         CentralUnparseableCode,
-        $"The central repository '{repo}' could not be read: {reason}");
+        $"The central repository '{repo}' could not be used: {reason}");
 
     /// <summary>Creates the failure for a repository too large to list.</summary>
     /// <param name="repo">The repository, as <c>owner/name</c>.</param>
