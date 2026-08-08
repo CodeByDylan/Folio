@@ -12,6 +12,8 @@
     <ItemGroup>
         <PackageReference Include="TUnit" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="StackExchange.Redis" />
+        <PackageReference Include="Testcontainers.Redis" />
 
     </ItemGroup>
 

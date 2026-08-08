@@ -13,7 +13,7 @@ src/Folio.Ingestion/   all I/O: GitHub, the snapshot store, media probing.
 src/Folio.Api/         endpoints, slices, refresh scheduling, composition root.
 
 tests/Folio.Domain.Tests/        fixtures and value objects; the bulk of the suite
-tests/Folio.Ingestion.Tests/     stubbed at HttpMessageHandler
+tests/Folio.Ingestion.Tests/     stubbed at HttpMessageHandler; Redis against a container, skipped without one
 tests/Folio.Api.Tests/           through HTTP, against a stubbed content source
 tests/Folio.ArchitectureTests/   the boundaries below
 ```
@@ -36,7 +36,7 @@ Versions live in `Directory.Packages.props`. Never put a `Version` on a `Package
 | GitHub | Octokit |
 | Snapshot store | StackExchange.Redis, or a file |
 | Telemetry | `ILogger` + OpenTelemetry |
-| Tests | TUnit, NetArchTest |
+| Tests | TUnit, NetArchTest, Testcontainers |
 
 Loom is a dependency, not a template. Its own repository conventions do not apply here.
 
