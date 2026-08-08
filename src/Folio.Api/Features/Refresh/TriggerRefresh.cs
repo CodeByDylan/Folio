@@ -29,7 +29,7 @@ internal sealed class Handler(
     ISnapshotStore store,
     ISnapshotProvider snapshots,
     IRefreshReporter reporter,
-    RefreshGate gate,
+    RefreshGate<Result<Response>> gate,
     FolioMetrics metrics,
     IOptionsMonitor<RefreshOptions> options,
     IHostApplicationLifetime lifetime,

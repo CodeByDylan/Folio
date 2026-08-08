@@ -1,5 +1,7 @@
 using Folio.Api.Infrastructure;
+using Loom.Results;
 using Microsoft.Extensions.DependencyInjection;
+using Slice = Folio.Api.Features.Refresh.TriggerRefresh;
 
 namespace Folio.Api.Tests;
 
@@ -8,7 +10,7 @@ public sealed class RefreshGateTests
     [Test]
     public async Task Callers_Arriving_During_A_Rebuild_Join_It()
     {
-        RefreshGate gate = new();
+        RefreshGate<int> gate = new();
         TaskCompletionSource held = new(TaskCreationOptions.RunContinuationsAsynchronously);
         int rebuilds = 0;
 
@@ -32,7 +34,7 @@ public sealed class RefreshGateTests
     [Test]
     public async Task A_Caller_Cancelling_Its_Wait_Does_Not_Cancel_The_Rebuild()
     {
-        RefreshGate gate = new();
+        RefreshGate<int> gate = new();
         TaskCompletionSource held = new(TaskCreationOptions.RunContinuationsAsynchronously);
         int completed = 0;
 
@@ -58,7 +60,7 @@ public sealed class RefreshGateTests
     [Test]
     public async Task A_Rebuild_After_The_Last_One_Finished_Starts_Fresh()
     {
-        RefreshGate gate = new();
+        RefreshGate<int> gate = new();
         int rebuilds = 0;
 
         Task<int> Rebuild() => Task.FromResult(Interlocked.Increment(ref rebuilds));
@@ -79,7 +81,7 @@ public sealed class RefreshGateTests
         using IServiceScope two = app.Services.CreateScope();
 
         // A per-scope gate would join nothing, and only a timing-dependent test would notice.
-        await Assert.That(one.ServiceProvider.GetRequiredService<RefreshGate>())
-            .IsSameReferenceAs(two.ServiceProvider.GetRequiredService<RefreshGate>());
+        await Assert.That(one.ServiceProvider.GetRequiredService<RefreshGate<Result<Slice.Response>>>())
+            .IsSameReferenceAs(two.ServiceProvider.GetRequiredService<RefreshGate<Result<Slice.Response>>>());
     }
 }

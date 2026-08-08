@@ -5,12 +5,14 @@ using Folio.Api.Options;
 using Folio.Ingestion;
 using Folio.Ingestion.GitHub;
 using Loom.Handlers;
+using Loom.Results;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
+using Slice = Folio.Api.Features.Refresh.TriggerRefresh;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +29,7 @@ builder.Services.AddOptions<ApiOptions>()
 
 builder.Services.AddSingleton<ISnapshotProvider, SnapshotProvider>();
 builder.Services.AddSingleton<IRefreshReporter, RefreshReporter>();
-builder.Services.AddSingleton<RefreshGate>();
+builder.Services.AddSingleton<RefreshGate<Result<Slice.Response>>>();
 builder.Services.AddSingleton<FolioMetrics>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddFolioHealthChecks();
