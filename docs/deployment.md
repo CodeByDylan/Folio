@@ -84,8 +84,15 @@ The health *endpoints* are the contract; each orchestrator polls them its own wa
 ## Fly.io
 
 `fly.toml` defines both checks — `/ready` gates load-balancer traffic, `/alive` is a machine-level
-check whose failure restarts the machine. The readiness check allows a `5m` grace period, matching
-`Refresh__Timeout`, so a deploy waits for the first snapshot instead of rolling back while it builds.
+check whose failure restarts the machine.
+
+The readiness check's grace period is one minute, which is Fly's ceiling: a longer value is silently
+lowered, so a deploy cannot be told to wait longer than that for the first snapshot. That ceiling
+only bites on a **first** deploy, where the volume is empty and the app must fetch every showcased
+repository before `/ready` turns green — a portfolio large enough to take over a minute will fail the
+check and roll back a healthy app. Later deploys republish from the volume on boot and are ready
+almost at once. If a first deploy does time out, deploy once without the health check, let the
+refresh land in the volume, then restore it.
 
 ```bash
 fly launch --no-deploy          # sets the app name and region

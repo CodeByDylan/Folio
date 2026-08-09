@@ -30,7 +30,8 @@ primary_region = "ams"
     method = "GET"
     interval = "15s"
     timeout = "5s"
-    grace_period = "5m"
+    # Fly caps this at one minute; a longer value is silently lowered.
+    grace_period = "1m"
 
 # Machine-level liveness: answers as long as the process serves HTTP, so a failure means restart.
 [checks]
