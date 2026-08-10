@@ -114,7 +114,11 @@ builder.Services.ConfigureHttpJsonOptions(json =>
 });
 
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.CreateSchemaReferenceId = SchemaIds.For;
+    _ = options.AddSchemaTransformer<SchemaFacts>();
+});
 
 builder.Services.Configure<ForwardedHeadersOptions>(forwarded =>
 {
