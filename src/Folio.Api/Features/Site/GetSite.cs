@@ -19,6 +19,7 @@ internal sealed record Request(SnapshotView View);
 /// <param name="Tagline">The site tagline.</param>
 /// <param name="Links">Site-level links.</param>
 /// <param name="Sections">Site-level pages, with their bodies.</param>
+/// <param name="Strings">Interface strings, keyed as authored without the <c>ui.</c> prefix.</param>
 /// <param name="Provenance">Fallbacks, keyed by RFC 6901 pointer.</param>
 internal sealed record Response(
     string RequestedLocale,
@@ -30,6 +31,7 @@ internal sealed record Response(
     string? Tagline,
     IReadOnlyList<SiteLinkView> Links,
     IReadOnlyList<SitePageView> Sections,
+    IReadOnlyDictionary<string, string> Strings,
     IReadOnlyDictionary<string, ProvenanceEntry> Provenance);
 
 internal sealed class Handler : IHandler<Request, Response>
@@ -52,6 +54,7 @@ internal sealed class Handler : IHandler<Request, Response>
             scope.Take(site.Tagline, "/tagline"),
             SiteMapping.Links(site, scope),
             SiteMapping.Sections(site, scope),
+            SiteMapping.Strings(site, scope),
             provenance.Entries));
     }
 }

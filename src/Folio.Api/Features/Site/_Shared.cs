@@ -38,6 +38,27 @@ internal static class SiteMapping
             scope.Take(link.Label, $"/links/{index}/label"))),
     ];
 
+    /// <summary>Maps interface strings, dropping any that resolved to nothing.</summary>
+    /// <param name="site">The resolved site.</param>
+    /// <param name="scope">Where fallbacks are recorded.</param>
+    /// <returns>The strings, keyed as authored.</returns>
+    public static IReadOnlyDictionary<string, string> Strings(
+        ResolvedSite site,
+        ProvenanceScope scope)
+    {
+        Dictionary<string, string> strings = new(StringComparer.Ordinal);
+
+        foreach (string name in site.Strings.Keys.Order(StringComparer.Ordinal))
+        {
+            if (scope.Take(site.Strings[name], $"/strings/{name}") is { } value)
+            {
+                strings[name] = value;
+            }
+        }
+
+        return strings;
+    }
+
     /// <summary>Maps site pages.</summary>
     /// <param name="site">The resolved site.</param>
     /// <param name="scope">Where fallbacks are recorded.</param>
