@@ -31,7 +31,11 @@ internal static class FolioEndpoints
             CancellationToken cancellationToken) =>
             await Read(snapshots, locale, context, view => handler.HandleAsync(new Site.Request(view), cancellationToken)))
             .AllowAnonymous()
-            .WithName("GetSite");
+            .WithName("GetSite")
+            .Produces<Site.Response>()
+            .Produces(StatusCodes.Status304NotModified)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         _ = routes.MapMethods("/projects", GetHead, static async (
             [FromQuery] string? locale,
@@ -42,7 +46,11 @@ internal static class FolioEndpoints
             await Read(snapshots, locale, context, view =>
                 handler.HandleAsync(new Projects.ListProjects.Request(view), cancellationToken)))
             .AllowAnonymous()
-            .WithName("ListProjects");
+            .WithName("ListProjects")
+            .Produces<Projects.ListProjects.Response>()
+            .Produces(StatusCodes.Status304NotModified)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         _ = routes.MapMethods("/projects/{slug}", GetHead, static async (
             string slug,
@@ -54,7 +62,12 @@ internal static class FolioEndpoints
             await Read(snapshots, locale, context, view =>
                 handler.HandleAsync(new Projects.GetProject.Request(view, slug), cancellationToken)))
             .AllowAnonymous()
-            .WithName("GetProject");
+            .WithName("GetProject")
+            .Produces<Projects.GetProject.Response>()
+            .Produces(StatusCodes.Status304NotModified)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         _ = routes.MapGet("/diagnostics", static async (
             [FromQuery] string? severity,
@@ -70,13 +83,19 @@ internal static class FolioEndpoints
             return result.ToHttpResult();
         })
             .AllowAnonymous()
-            .WithName("GetDiagnostics");
+            .WithName("GetDiagnostics")
+            .Produces<Diagnostics.Response>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         _ = routes.MapPost("/refresh", static async (
             IHandler<Refresh.Request, Refresh.Response> handler,
             CancellationToken cancellationToken) =>
             (await handler.HandleAsync(new Refresh.Request(), cancellationToken)).ToHttpResult())
-            .WithName("TriggerRefresh");
+            .WithName("TriggerRefresh")
+            .Produces<Refresh.Response>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         return routes;
     }

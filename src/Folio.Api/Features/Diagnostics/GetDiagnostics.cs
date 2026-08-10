@@ -24,7 +24,9 @@ internal sealed record Response(
 /// <summary>The outcome of the most recent rebuild attempt.</summary>
 /// <param name="AttemptedAt">When it ran.</param>
 /// <param name="Outcome">How it ended.</param>
-internal sealed record RefreshView(DateTimeOffset AttemptedAt, string Outcome);
+internal sealed record RefreshView(
+    DateTimeOffset AttemptedAt,
+    [property: WireEnum(typeof(RefreshOutcome), WireNaming.Hyphenated)] string Outcome);
 
 /// <summary>One diagnostic.</summary>
 /// <param name="Code">The stable identifier.</param>
@@ -36,7 +38,7 @@ internal sealed record RefreshView(DateTimeOffset AttemptedAt, string Outcome);
 /// <param name="Message">A human-readable description.</param>
 internal sealed record DiagnosticView(
     string Code,
-    string Severity,
+    [property: WireEnum(typeof(DiagnosticSeverity))] string Severity,
     string? Project,
     string? File,
     PositionView? Position,
