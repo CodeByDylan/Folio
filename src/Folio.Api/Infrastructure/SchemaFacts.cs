@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using Folio.Domain.Model;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
@@ -23,20 +24,28 @@ internal sealed class SchemaFacts : IOpenApiSchemaTransformer
         ArgumentNullException.ThrowIfNull(context);
 
         Describe(schema, context);
-        Omit(schema);
+        Omit(schema, context);
 
         return Task.CompletedTask;
     }
+
+    /// <summary>Finds the property a serialized name was written from.</summary>
+    /// <param name="declaring">The type holding the property.</param>
+    /// <param name="name">The serialized name, which the naming policy has already camel-cased.</param>
+    /// <returns>The property, or <see langword="null" /> when the name matches none.</returns>
+    private static PropertyInfo? Property(Type declaring, string name) =>
+        declaring.GetProperty(
+            name,
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
     /// <summary>Lists the members a string property accepts, when it carries an enum.</summary>
     /// <param name="schema">The property's schema.</param>
     /// <param name="context">What the schema describes.</param>
     private static void Describe(OpenApiSchema schema, OpenApiSchemaTransformerContext context)
     {
-        // JsonPropertyInfo.Name is the serialized name, which the naming policy has already camel-cased.
-        PropertyInfo? property = context.JsonPropertyInfo?.DeclaringType.GetProperty(
-            context.JsonPropertyInfo.Name,
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        PropertyInfo? property = context.JsonPropertyInfo is { } member
+            ? Property(member.DeclaringType, member.Name)
+            : null;
 
         if (property?.GetCustomAttribute<WireEnumAttribute>() is not { } wire)
         {
@@ -48,20 +57,23 @@ internal sealed class SchemaFacts : IOpenApiSchemaTransformer
 
     /// <summary>Drops the properties the serializer omits from those the schema requires.</summary>
     /// <param name="schema">The schema being built.</param>
-    private static void Omit(OpenApiSchema schema)
+    /// <param name="context">What the schema describes.</param>
+    private static void Omit(OpenApiSchema schema, OpenApiSchemaTransformerContext context)
     {
-        if (schema.Required is not { Count: > 0 } required || schema.Properties is not { } properties)
+        if (schema.Required is not { Count: > 0 } required)
         {
             return;
         }
 
+        NullabilityInfoContext nullability = new();
+
         // A null-valued optional is written by omitting its key, so the schema must not require it.
-        foreach (string name in required.ToArray())
+        foreach (JsonPropertyInfo member in context.JsonTypeInfo.Properties)
         {
-            if (properties.TryGetValue(name, out IOpenApiSchema? property)
-                && property.Type?.HasFlag(JsonSchemaType.Null) == true)
+            if (Property(context.JsonTypeInfo.Type, member.Name) is { } property
+                && nullability.Create(property).ReadState == NullabilityState.Nullable)
             {
-                _ = required.Remove(name);
+                _ = required.Remove(member.Name);
             }
         }
     }
