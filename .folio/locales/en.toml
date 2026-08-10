@@ -1,0 +1,4 @@
+project.name    = "Folio"
+project.tagline = "Portfolios assembled from the repos they describe"
+
+link.docs = "Design docs"
