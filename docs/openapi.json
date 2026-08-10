@@ -674,6 +674,7 @@
           "locales",
           "links",
           "sections",
+          "strings",
           "provenance"
         ],
         "type": "object",
@@ -718,6 +719,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SitePageView"
+            }
+          },
+          "strings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
             }
           },
           "provenance": {
