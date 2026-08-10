@@ -450,7 +450,6 @@
         "required": [
           "code",
           "severity",
-          "position",
           "message"
         ],
         "type": "object",
@@ -501,7 +500,6 @@
       },
       "GetDiagnosticsResponse": {
         "required": [
-          "lastRefresh",
           "counts",
           "diagnostics"
         ],
