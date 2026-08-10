@@ -39,6 +39,13 @@ jobs:
       - name: Test
         run: dotnet test --no-build
 
+      - name: OpenAPI document
+        run: |
+          ./scripts/openapi.sh
+          git add --intent-to-add docs/openapi.json
+          git diff --exit-code docs/openapi.json \
+            || { echo "::error::docs/openapi.json is stale. Run scripts/openapi.sh and commit the result."; exit 1; }
+
   image:
     runs-on: ubuntu-latest
 

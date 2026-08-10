@@ -11,7 +11,12 @@ internal static class Wire
     /// <returns>The lowercase name.</returns>
     public static string Lower<TEnum>(TEnum value)
         where TEnum : struct, Enum =>
-        value.ToString().ToLowerInvariant();
+        Lower(value.ToString());
+
+    /// <summary>Converts an enum member name to the lowercase form used on the wire.</summary>
+    /// <param name="name">The enum member name.</param>
+    /// <returns>The lowercase name.</returns>
+    public static string Lower(string name) => name.ToLowerInvariant();
 
     /// <summary>Converts a pascal-case enum name to the hyphenated form used on the wire.</summary>
     /// <param name="name">The enum member name.</param>

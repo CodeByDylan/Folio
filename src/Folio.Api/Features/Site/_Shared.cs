@@ -7,14 +7,21 @@ namespace Folio.Api.Features.Site;
 /// <param name="Type">What the link points at.</param>
 /// <param name="Url">The link target.</param>
 /// <param name="Label">The label to render.</param>
-internal sealed record SiteLinkView(string Type, string Url, string? Label);
+internal sealed record SiteLinkView(
+    [property: WireEnum(typeof(SiteLinkType))] string Type,
+    string Url,
+    string? Label);
 
 /// <summary>A site-level page.</summary>
 /// <param name="Id">Stable identifier and route fragment.</param>
 /// <param name="Title">The page title.</param>
 /// <param name="Body">The rewritten markdown body.</param>
 /// <param name="Source">Where the body came from.</param>
-internal sealed record SitePageView(string Id, string? Title, string? Body, string Source);
+internal sealed record SitePageView(
+    string Id,
+    string? Title,
+    string? Body,
+    [property: WireEnum(typeof(SectionSource))] string Source);
 
 /// <summary>Maps the resolved site onto its wire shapes.</summary>
 internal static class SiteMapping

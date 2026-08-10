@@ -7,7 +7,10 @@ namespace Folio.Api.Features.Projects;
 /// <param name="Id">The vocabulary identifier.</param>
 /// <param name="Kind">What sort of thing the tag names.</param>
 /// <param name="Label">The label to render.</param>
-internal sealed record TagView(string Id, string? Kind, string? Label);
+internal sealed record TagView(
+    string Id,
+    [property: WireEnum(typeof(TagKind))] string? Kind,
+    string? Label);
 
 /// <summary>An image with its intrinsic size.</summary>
 /// <param name="Role">The role it fills, such as <c>hero</c>.</param>
@@ -21,21 +24,32 @@ internal sealed record MediaView(string Role, string Url, int? Width, int? Heigh
 /// <param name="Type">What the link points at.</param>
 /// <param name="Url">The link target.</param>
 /// <param name="Label">The label to render.</param>
-internal sealed record LinkView(string Type, string Url, string? Label);
+internal sealed record LinkView(
+    [property: WireEnum(typeof(LinkType))] string Type,
+    string Url,
+    string? Label);
 
 /// <summary>A typed edge to another project.</summary>
 /// <param name="Type">How the two relate.</param>
 /// <param name="Target">The other project's slug.</param>
 /// <param name="Label">The label to render.</param>
 /// <param name="Generated">Whether this edge was inverted from one declared on the target.</param>
-internal sealed record RelationView(string Type, string Target, string? Label, bool Generated);
+internal sealed record RelationView(
+    [property: WireEnum(typeof(RelationType), WireNaming.Vocabulary)] string Type,
+    string Target,
+    string? Label,
+    bool Generated);
 
 /// <summary>One unit of authored prose.</summary>
 /// <param name="Id">Stable within the project.</param>
 /// <param name="Title">The section title.</param>
 /// <param name="Body">The rewritten markdown body.</param>
 /// <param name="Source">Whether the body was authored or lifted from a README.</param>
-internal sealed record SectionView(string Id, string? Title, string? Body, string Source);
+internal sealed record SectionView(
+    string Id,
+    string? Title,
+    string? Body,
+    [property: WireEnum(typeof(SectionSource))] string Source);
 
 /// <summary>The GitHub facts a project carries.</summary>
 /// <param name="Description">The repository description.</param>
