@@ -1,0 +1,24 @@
+version = 1
+
+[project]
+slug    = "folio"
+status  = "active"
+role    = "author"
+started = "2026-08"
+tags    = ["csharp", "dotnet", "aspnetcore", "api"]
+
+[[links]]
+type = "docs"
+url  = "https://github.com/CodeByDylan/Folio/tree/main/docs"
+
+[[relations]]
+type   = "uses"
+target = "loom"
+
+[[sections]]
+id   = "overview"
+file = "overview.md"
+
+[[sections]]
+id   = "story"
+file = "story.md"
