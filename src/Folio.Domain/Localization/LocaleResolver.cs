@@ -74,6 +74,18 @@ internal sealed class LocaleResolver(
         return null;
     }
 
+    /// <summary>Gets every key declared under a prefix, across every locale.</summary>
+    /// <param name="prefix">The dotted prefix, including its trailing separator.</param>
+    /// <returns>The keys, ordered.</returns>
+    public IReadOnlyList<string> KeysUnder(string prefix) =>
+    [
+        .. bundles.Values
+            .SelectMany(bundle => bundle.Keys)
+            .Where(key => key.StartsWith(prefix, StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal),
+    ];
+
     /// <summary>Reports every declared key the configuration never reads.</summary>
     /// <param name="referenced">The keys the configuration actually uses.</param>
     /// <param name="sink">A sink scoped to the owning project.</param>

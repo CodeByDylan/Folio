@@ -12,6 +12,8 @@ namespace Folio.Domain.Resolution;
 /// <summary>Resolves a complete portfolio from a set of files.</summary>
 public sealed class PortfolioResolver
 {
+    /// <summary>The prefix marking a locale key as an interface string rather than content.</summary>
+    private const string UiPrefix = "ui.";
 
     /// <summary>Resolves the portfolio in every declared locale.</summary>
     /// <param name="central">The central <c>.folio</c> contents.</param>
@@ -249,7 +251,33 @@ public sealed class PortfolioResolver
                 link.Url,
                 centralStrings.Resolve(EnumNames.LinkKey(link.Type), locale, sink, $"/links/{index}/label")))],
             siteSections,
-            projects);
+            projects,
+            Strings(centralStrings, locale, sink));
+    }
+
+    /// <summary>Resolves every declared interface string for one locale.</summary>
+    /// <param name="centralStrings">The central locale bundles.</param>
+    /// <param name="locale">The locale being resolved.</param>
+    /// <param name="sink">Where fallbacks are reported.</param>
+    /// <returns>The strings, keyed as authored without the prefix.</returns>
+    private static IReadOnlyDictionary<string, Localized<string>> Strings(
+        LocaleResolver centralStrings,
+        LocaleTag locale,
+        DiagnosticSink sink)
+    {
+        Dictionary<string, Localized<string>> strings = new(StringComparer.Ordinal);
+
+        foreach (string key in centralStrings.KeysUnder(UiPrefix))
+        {
+            string name = key[UiPrefix.Length..];
+
+            if (centralStrings.Resolve(key, locale, sink, $"/strings/{name}") is { } value)
+            {
+                strings[name] = value;
+            }
+        }
+
+        return strings;
     }
 
     private static ParsedProject? Parse(
@@ -416,6 +444,11 @@ public sealed class PortfolioResolver
         DiagnosticSink sink)
     {
         HashSet<string> central = new(StringComparer.Ordinal) { "site.title", "site.tagline" };
+
+        foreach (string key in centralStrings.KeysUnder(UiPrefix))
+        {
+            _ = central.Add(key);
+        }
 
         foreach (SiteLinkEntry link in config.Site.Links)
         {

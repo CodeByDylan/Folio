@@ -9,6 +9,7 @@ namespace Folio.Domain.Model;
 /// <param name="Links">Site-level links, in declaration order.</param>
 /// <param name="Sections">Site-level pages, in declaration order.</param>
 /// <param name="Projects">Every project, in <c>projects.toml</c> order.</param>
+/// <param name="Strings">Interface strings the site declares, by key without the <c>ui.</c> prefix.</param>
 public sealed record ResolvedSite(
     Uri Url,
     LocaleTag DefaultLocale,
@@ -17,7 +18,8 @@ public sealed record ResolvedSite(
     Localized<string>? Tagline,
     IReadOnlyList<ResolvedSiteLink> Links,
     IReadOnlyList<ResolvedSection> Sections,
-    IReadOnlyList<ResolvedProject> Projects);
+    IReadOnlyList<ResolvedProject> Projects,
+    IReadOnlyDictionary<string, Localized<string>> Strings);
 
 /// <summary>A site-level link with its localized label.</summary>
 /// <param name="Type">What the link points at.</param>
