@@ -17,7 +17,7 @@
         <PackageVersion Include="Tomlyn" Version="2.10.1" />
         <PackageVersion Include="Markdig" Version="0.42.0" />
         <PackageVersion Include="Octokit" Version="14.0.0" />
-        <PackageVersion Include="StackExchange.Redis" Version="2.13.1" />
+        <PackageVersion Include="StackExchange.Redis" Version="3.1.13" />
         <PackageVersion Include="Scalar.AspNetCore" Version="2.16.16" />
     </ItemGroup>
 
