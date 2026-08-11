@@ -183,6 +183,12 @@ public sealed class GitHubContentSource(
                 settings.CentralRepository,
                 central.Value.Sha,
                 central.Value.Files,
+                await MeasureAsync(
+                    settings.CentralRepository,
+                    central.Value.Sha,
+                    central.Value.MediaPresent,
+                    cancellationToken),
+                central.Value.MediaPresent,
                 [.. fetched.OrderBy(entry => entry.Index).Select(entry => entry.Input)],
                 DateTimeOffset.UtcNow),
             sink.Diagnostics,
@@ -298,7 +304,8 @@ public sealed class GitHubContentSource(
             // Declared media may live anywhere in the repository, so existence comes from the tree.
             HashSet<string> present = new(StringComparer.Ordinal);
 
-            foreach (string declared in MediaReferenceReader.Read(set, folioRoot))
+            foreach (string declared in MediaReferenceReader.Read(set, folioRoot)
+                .Concat(MediaReferenceReader.ReadSections(set, folioRoot)))
             {
                 if (tree.Tree.Any(item => item.Type.Value == TreeType.Blob
                     && string.Equals(item.Path, declared, StringComparison.Ordinal)))
@@ -384,18 +391,8 @@ public sealed class GitHubContentSource(
         IReadOnlyList<RepoLanguage> languages = await LanguagesAsync(contents.Repository, calls, cancellationToken);
         IReadOnlyList<RepoRelease> releases = await ReleasesAsync(contents.Repository, calls, cancellationToken);
 
-        Dictionary<string, MediaSize> sizes = new(StringComparer.Ordinal);
-
-        // Only declared media that exists can carry dimensions.
-        foreach (string path in contents.MediaPresent.Order(StringComparer.Ordinal))
-        {
-            MediaSize? size = await media.MeasureAsync(reference.Repo, contents.Sha, path, cancellationToken);
-
-            if (size is not null)
-            {
-                sizes[path] = size;
-            }
-        }
+        IReadOnlyDictionary<string, MediaSize> sizes = await MeasureAsync(
+            reference.Repo, contents.Sha, contents.MediaPresent, cancellationToken);
 
         return new RepoInput(
             reference.Repo,
@@ -419,6 +416,26 @@ public sealed class GitHubContentSource(
                 releases),
             sizes,
             contents.MediaPresent);
+    }
+
+    /// <summary>Measures declared media that exists; only those can carry dimensions.</summary>
+    private async Task<IReadOnlyDictionary<string, MediaSize>> MeasureAsync(
+        string repo,
+        string sha,
+        IReadOnlySet<string> present,
+        CancellationToken cancellationToken)
+    {
+        Dictionary<string, MediaSize> sizes = new(StringComparer.Ordinal);
+
+        foreach (string path in present.Order(StringComparer.Ordinal))
+        {
+            if (await media.MeasureAsync(repo, sha, path, cancellationToken) is { } size)
+            {
+                sizes[path] = size;
+            }
+        }
+
+        return sizes;
     }
 
     private async Task<IReadOnlyList<RepoRelease>> ReleasesAsync(

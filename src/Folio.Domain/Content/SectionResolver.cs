@@ -100,11 +100,17 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
         Func<string, MarkdownContext> context,
         DiagnosticSink sink)
     {
+        // A typed section carries its own data; only prose resolves to a markdown file.
+        if (section.Type is not SectionType.Prose || section.File is not { } name)
+        {
+            return null;
+        }
+
         bool atRequestedLocale = true;
 
         foreach (LocaleTag locale in locales)
         {
-            string path = $"{folioRoot}/content/{locale.Value}/{section.File}";
+            string path = $"{folioRoot}/content/{locale.Value}/{name}";
 
             if (!files.TryGet(path, out ReadOnlyMemory<byte> contents))
             {
@@ -124,6 +130,7 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
             {
                 // Two sections may name the same file; the first declared wins rather than throwing.
                 SectionIdByPath = siblings
+                    .Where(sibling => sibling.File is not null)
                     .GroupBy(sibling => $"{folioRoot}/content/{locale.Value}/{sibling.File}", StringComparer.Ordinal)
                     .ToDictionary(group => group.Key, group => group.First().Id, StringComparer.Ordinal),
             };
@@ -162,7 +169,7 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
             string rest = path[prefix.Length..];
             int slash = rest.IndexOf('/', StringComparison.Ordinal);
 
-            return slash >= 0 && string.Equals(rest[(slash + 1)..], section.File, StringComparison.Ordinal);
+            return slash >= 0 && string.Equals(rest[(slash + 1)..], name, StringComparison.Ordinal);
         });
 
         if (anywhere)

@@ -25,6 +25,30 @@ internal static class Fixture
     /// <returns>The absolute path.</returns>
     public static string Path_(string name) => Path.Combine(AppContext.BaseDirectory, "fixtures", name);
 
+    /// <summary>Builds a central input, deriving present media the way ingestion does.</summary>
+    /// <param name="repo">The repository holding the central config, as <c>owner/name</c>.</param>
+    /// <param name="sha">The commit it was read from.</param>
+    /// <param name="files">Its contents.</param>
+    /// <param name="sizes">Intrinsic sizes for media that could be measured.</param>
+    /// <returns>The input.</returns>
+    public static CentralInput Central(
+        string repo,
+        string sha,
+        FileSet files,
+        IReadOnlyDictionary<string, MediaSize>? sizes = null)
+    {
+        HashSet<string> present = new(
+            MediaReferenceReader.ReadSections(files, ".folio").Where(files.Paths.Contains),
+            StringComparer.Ordinal);
+
+        return new CentralInput(
+            repo,
+            sha,
+            files,
+            sizes ?? new Dictionary<string, MediaSize>(StringComparer.Ordinal),
+            present);
+    }
+
     /// <summary>Builds a repository input with plausible GitHub metadata.</summary>
     /// <param name="repo">The repository, as <c>owner/name</c>.</param>
     /// <param name="directory">The fixture directory holding the repository.</param>

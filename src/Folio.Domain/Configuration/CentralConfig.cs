@@ -56,5 +56,18 @@ internal sealed record SiteLinkEntry(SiteLinkType Type, Uri Url);
 /// <summary>One declared section, shared by site and project configs.</summary>
 /// <param name="Id">Stable within its owner.</param>
 /// <param name="Type">What the section holds. Project sections are always prose.</param>
-/// <param name="File">The locale-agnostic file name under <c>content/&lt;locale&gt;/</c>.</param>
-internal sealed record SectionEntry(string Id, SectionType Type, string File);
+/// <param name="File">The locale-agnostic file name under <c>content/&lt;locale&gt;/</c>, for prose only.</param>
+/// <param name="Hero">The data read from <c>sections/&lt;id&gt;.toml</c>, for a hero only.</param>
+internal sealed record SectionEntry(string Id, SectionType Type, string? File, HeroConfig? Hero = null);
+
+/// <summary><c>sections/&lt;id&gt;.toml</c> for a hero section, parsed.</summary>
+/// <param name="Actions">Calls to action, in declaration order.</param>
+/// <param name="Media">Image references keyed by role, such as <c>image</c>.</param>
+internal sealed record HeroConfig(
+    IReadOnlyList<HeroActionEntry> Actions,
+    IReadOnlyDictionary<string, string> Media);
+
+/// <summary>One call to action on a hero.</summary>
+/// <param name="Id">Stable within the section; the suffix of its label key.</param>
+/// <param name="Url">Where it points, absolute as authored.</param>
+internal sealed record HeroActionEntry(string Id, Uri Url);

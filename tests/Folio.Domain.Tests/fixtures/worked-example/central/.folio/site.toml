@@ -11,6 +11,10 @@ type = "github"
 url  = "https://github.com/dutchy"
 
 [[site.sections]]
+id   = "intro"
+type = "hero"
+
+[[site.sections]]
 id   = "about"
 type = "prose"
 file = "about.md"
@@ -18,4 +22,4 @@ file = "about.md"
 [[site.pages]]
 slug     = "home"
 home     = true
-sections = ["about"]
+sections = ["intro", "about"]

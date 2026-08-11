@@ -161,7 +161,7 @@ public sealed class WorkedExampleTests
     {
         Snapshot snapshot = Resolve();
 
-        ResolvedSection about = snapshot.Localizations[Dutch].Pages.Single().Sections.Single();
+        ResolvedSection about = snapshot.Localizations[Dutch].Pages.Single().Sections.Single(section => section.Id == "about");
 
         await Assert.That(about.Id).IsEqualTo("about");
         await Assert.That(about.Title!.Value).IsEqualTo("Over mij");
@@ -171,10 +171,33 @@ public sealed class WorkedExampleTests
     [Test]
     public async Task Central_Section_Images_Are_Pinned_To_The_Central_Repository()
     {
-        ResolvedSection about = Resolve().Localizations[English].Pages.Single().Sections.Single();
+        ResolvedSection about = Resolve().Localizations[English].Pages.Single().Sections.Single(section => section.Id == "about");
 
         await Assert.That(about.Body!.Value)
             .Contains("https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/me.png");
+    }
+
+    [Test]
+    public async Task A_Hero_Carries_Its_Strings_Actions_And_Portrait()
+    {
+        ResolvedSection intro = Resolve().Localizations[Dutch].Pages.Single()
+            .Sections.Single(section => section.Id == "intro");
+
+        ResolvedHero hero = intro.Hero!;
+
+        await Assert.That(intro.Type).IsEqualTo(SectionType.Hero);
+        await Assert.That(intro.Body).IsNull();
+        await Assert.That(hero.Headline!.Value).IsEqualTo("Ik bouw backendsystemen");
+
+        // Declared as an absolute URL under site.url, so it is served as a path.
+        await Assert.That(hero.Actions[0].Url).IsEqualTo("/projects");
+        await Assert.That(hero.Actions[0].Label!.Value).IsEqualTo("Bekijk mijn werk");
+        await Assert.That(hero.Actions[1].Url).IsEqualTo("https://github.com/dutchy");
+
+        await Assert.That(hero.Media.Single().Url.ToString())
+            .IsEqualTo("https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/portrait.png");
+        await Assert.That(hero.Media.Single().Width).IsEqualTo(1200);
+        await Assert.That(hero.Media.Single().Alt!.Value).IsEqualTo("Een portret van Dutchy");
     }
 
     [Test]
@@ -240,7 +263,14 @@ public sealed class WorkedExampleTests
         string root = Fixture.Path_("worked-example");
 
         Result<Snapshot> result = new PortfolioResolver().Resolve(
-            new CentralInput("dutchy/portfolio", "centralsha", Fixture.Load(Path.Combine(root, "central"))),
+            Fixture.Central(
+                "dutchy/portfolio",
+                "centralsha",
+                Fixture.Load(Path.Combine(root, "central")),
+                new Dictionary<string, MediaSize>(StringComparer.Ordinal)
+                {
+                    [".folio/media/portrait.png"] = new(1200, 1200),
+                }),
             [
                 Fixture.Repo("dutchy/folio", Path.Combine(root, "repos", "folio"), sizes),
                 Fixture.Repo("dutchy/folio-core", Path.Combine(root, "repos", "folio-core")),

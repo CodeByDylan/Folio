@@ -916,6 +916,66 @@
           }
         }
       },
+      "HeroActionView": {
+        "required": [
+          "id",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "HeroMediaView": {
+        "required": [
+          "role",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "alt": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "LanguageView": {
         "required": [
           "language",
@@ -1123,15 +1183,73 @@
       },
       "PageSectionView": {
         "required": [
-          "id",
-          "type",
-          "source"
+          "type"
         ],
         "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/PageSectionViewProseSectionView"
+          },
+          {
+            "$ref": "#/components/schemas/PageSectionViewHeroSectionView"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "prose": "#/components/schemas/PageSectionViewProseSectionView",
+            "hero": "#/components/schemas/PageSectionViewHeroSectionView"
+          }
+        }
+      },
+      "PageSectionViewHeroSectionView": {
+        "required": [
+          "actions",
+          "media",
+          "id"
+        ],
         "properties": {
-          "id": {
+          "type": {
+            "enum": [
+              "hero"
+            ],
             "type": "string"
           },
+          "headline": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subheadline": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroActionView"
+            }
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroMediaView"
+            }
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "PageSectionViewProseSectionView": {
+        "required": [
+          "source",
+          "id"
+        ],
+        "properties": {
           "type": {
             "enum": [
               "prose"
@@ -1155,6 +1273,9 @@
               "folio",
               "readme"
             ],
+            "type": "string"
+          },
+          "id": {
             "type": "string"
           }
         }

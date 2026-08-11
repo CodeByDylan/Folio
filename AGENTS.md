@@ -104,6 +104,10 @@ mocking library; an imaging library; a mediator or dispatcher.
   renders it and defaults to `prose`; project sections are prose by construction and carry no `type`.
   A page names a slug and may claim `home`; it never names a route, because the format carries no
   frontend URL patterns. Adding a section type is a row in `EnumNames`, a parser and a wire shape.
+- Prose is the only type whose content is a markdown file. Every other type reads
+  `sections/<id>.toml` for its locale-invariant structure and `section.<id>.*` locale keys for its
+  words, so a translator never sees structure. Its wire shape is a sealed record deriving from
+  `PageSectionView`, discriminated on `type`.
 
 ## Ingestion
 

@@ -87,7 +87,9 @@ internal sealed class Handler(
             new CentralInput(
                 fetched.Value.Inputs.CentralRepo,
                 fetched.Value.Inputs.CentralSha,
-                fetched.Value.Inputs.Central),
+                fetched.Value.Inputs.Central,
+                fetched.Value.Inputs.CentralMediaSizes,
+                fetched.Value.Inputs.CentralMediaPaths),
             fetched.Value.Inputs.Repos,
             Version,
             clock.GetUtcNow(),
@@ -129,7 +131,12 @@ internal sealed class Handler(
     private void PublishStored(StoredInputs previous)
     {
         Result<Snapshot> resolved = new PortfolioResolver().Resolve(
-            new CentralInput(previous.CentralRepo, previous.CentralSha, previous.Central),
+            new CentralInput(
+                previous.CentralRepo,
+                previous.CentralSha,
+                previous.Central,
+                previous.CentralMediaSizes,
+                previous.CentralMediaPaths),
             previous.Repos,
             Version,
             // Stamp the capture time, not now, so BuiltAt / Last-Modified / snapshot age tell the truth.
