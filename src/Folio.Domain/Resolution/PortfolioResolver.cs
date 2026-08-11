@@ -240,6 +240,10 @@ public sealed class PortfolioResolver
         List<ResolvedProject> projects = [.. parsed.Select(project => projectResolver.Resolve(
             project, locale, config.Site, centralStrings, config.Tags, graph, projectSinks[project.Slug]))];
 
+        // A section missing in every locale is dropped by the resolver, so a page may list one that is gone.
+        Dictionary<string, ResolvedSection> byId = siteSections.ToDictionary(
+            section => section.Id, StringComparer.Ordinal);
+
         return new ResolvedSite(
             config.Site.Url,
             config.Site.DefaultLocale,
@@ -250,7 +254,14 @@ public sealed class PortfolioResolver
                 link.Type,
                 link.Url,
                 centralStrings.Resolve(EnumNames.LinkKey(link.Type), locale, sink, $"/links/{index}/label")))],
-            siteSections,
+            [.. config.Site.Pages.Select((page, index) => new ResolvedPage(
+                page.Slug,
+                page.IsHome,
+                page.InNav,
+                centralStrings.Resolve(EnumNames.PageKey(page.Slug), locale, sink, $"/pages/{index}/navLabel"),
+                [.. page.Sections
+                    .Select(id => byId.TryGetValue(id, out ResolvedSection? section) ? section : null)
+                    .OfType<ResolvedSection>()]))],
             projects,
             Strings(centralStrings, locale, sink));
     }
@@ -453,6 +464,11 @@ public sealed class PortfolioResolver
         foreach (SiteLinkEntry link in config.Site.Links)
         {
             _ = central.Add(EnumNames.LinkKey(link.Type));
+        }
+
+        foreach (PageEntry page in config.Site.Pages)
+        {
+            _ = central.Add(EnumNames.PageKey(page.Slug));
         }
 
         foreach (string id in config.Tags.Keys)

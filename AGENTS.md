@@ -100,6 +100,10 @@ mocking library; an imaging library; a mediator or dispatcher.
   under `schema.unknown_key`. Anything the schema does not name is dropped, so a mistyped `[[sectons]]`
   must not cost its content in silence. Locale files are exempt; their keys are open by design, and
   a table header form (`[project]` + `tagline`) loads as the same key as its dotted form.
+- Site sections are declared once and composed into pages by reference. A section's `type` says what
+  renders it and defaults to `prose`; project sections are prose by construction and carry no `type`.
+  A page names a slug and may claim `home`; it never names a route, because the format carries no
+  frontend URL patterns. Adding a section type is a row in `EnumNames`, a parser and a wire shape.
 
 ## Ingestion
 

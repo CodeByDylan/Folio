@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Diagnostics = Folio.Api.Features.Diagnostics.GetDiagnostics;
+using Pages = Folio.Api.Features.Pages.GetPage;
 using Projects = Folio.Api.Features.Projects;
 using Refresh = Folio.Api.Features.Refresh.TriggerRefresh;
 using Site = Folio.Api.Features.Site.GetSite;
@@ -35,6 +36,23 @@ internal static class FolioEndpoints
             .Produces<Site.Response>()
             .Produces(StatusCodes.Status304NotModified)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
+        _ = routes.MapMethods("/pages/{slug}", GetHead, static async (
+            string slug,
+            [FromQuery] string? locale,
+            ISnapshotProvider snapshots,
+            IHandler<Pages.Request, Pages.Response> handler,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+            await Read(snapshots, locale, context, view =>
+                handler.HandleAsync(new Pages.Request(view, slug), cancellationToken)))
+            .AllowAnonymous()
+            .WithName("GetPage")
+            .Produces<Pages.Response>()
+            .Produces(StatusCodes.Status304NotModified)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         _ = routes.MapMethods("/projects", GetHead, static async (

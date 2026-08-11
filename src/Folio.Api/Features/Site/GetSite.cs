@@ -18,7 +18,7 @@ internal sealed record Request(SnapshotView View);
 /// <param name="Title">The site title.</param>
 /// <param name="Tagline">The site tagline.</param>
 /// <param name="Links">Site-level links.</param>
-/// <param name="Sections">Site-level pages, with their bodies.</param>
+/// <param name="Pages">The pages the site publishes, without their sections.</param>
 /// <param name="Strings">Interface strings, keyed as authored without the <c>ui.</c> prefix.</param>
 /// <param name="Provenance">Fallbacks, keyed by RFC 6901 pointer.</param>
 internal sealed record Response(
@@ -30,7 +30,7 @@ internal sealed record Response(
     string? Title,
     string? Tagline,
     IReadOnlyList<SiteLinkView> Links,
-    IReadOnlyList<SitePageView> Sections,
+    IReadOnlyList<SitePageView> Pages,
     IReadOnlyDictionary<string, string> Strings,
     IReadOnlyDictionary<string, ProvenanceEntry> Provenance);
 
@@ -53,7 +53,7 @@ internal sealed class Handler : IHandler<Request, Response>
             scope.Take(site.Title, "/title"),
             scope.Take(site.Tagline, "/tagline"),
             SiteMapping.Links(site, scope),
-            SiteMapping.Sections(site, scope),
+            SiteMapping.Pages(site, scope),
             SiteMapping.Strings(site, scope),
             provenance.Entries));
     }

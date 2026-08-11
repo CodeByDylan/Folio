@@ -16,20 +16,33 @@
       }
     }
   ],
-  "sections": [
+  "pages": [
     {
-      "id": "about",
-      "title": {
-        "value": "About",
+      "slug": "home",
+      "isHome": true,
+      "inNav": true,
+      "navLabel": {
+        "value": "Home",
         "locale": "en",
         "isFallback": false
       },
-      "body": {
-        "value": "I build things.\n\n![Me](https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/me.png)",
-        "locale": "en",
-        "isFallback": false
-      },
-      "source": "Folio"
+      "sections": [
+        {
+          "id": "about",
+          "type": "Prose",
+          "title": {
+            "value": "About",
+            "locale": "en",
+            "isFallback": false
+          },
+          "body": {
+            "value": "I build things.\n\n![Me](https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/me.png)",
+            "locale": "en",
+            "isFallback": false
+          },
+          "source": "Folio"
+        }
+      ]
     }
   ],
   "projects": [
@@ -121,6 +134,7 @@
       "sections": [
         {
           "id": "overview",
+          "type": "Prose",
           "title": {
             "value": "Overview",
             "locale": "en",
@@ -135,6 +149,7 @@
         },
         {
           "id": "architecture",
+          "type": "Prose",
           "title": {
             "value": "Architecture",
             "locale": "en",
@@ -249,6 +264,7 @@
       "sections": [
         {
           "id": "usage",
+          "type": "Prose",
           "title": {
             "value": "Usage",
             "locale": "en",

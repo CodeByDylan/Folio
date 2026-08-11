@@ -137,6 +137,20 @@ the slug derived from its directory, since it has no `project.toml` to declare o
 | `section.missing_locale` | info | Falls back |
 | `section.empty` | warning | Empty section with a fallback title — not silently dropped |
 | `section.body_h1` | warning | A second H1 after the title; left as-is |
+| `section.unreferenced` | warning | A declared section on no page; nothing renders it |
+
+### `page.*` — site composition
+
+| Code | Severity | Behaviour |
+| --- | --- | --- |
+| `page.slug_invalid` | warning | Not a well-formed slug; the page is dropped |
+| `page.duplicate_slug` | warning | Declared twice; the first keeps the identity and the later one is dropped |
+| `page.unknown_section` | warning | Lists a section that is not declared; that entry is dropped, the page is kept |
+| `page.no_home` | warning | Pages exist but none is `home`, so the site has no entry point |
+| `page.duplicate_home` | warning | A second `home` claim; the first wins and the later claim is ignored |
+
+An unknown section `type` is not a `page.*` code — it is `schema.unknown_value`, because it is a
+value outside a declared vocabulary like any other. The section is dropped.
 
 ### `markdown.*` — content rewriting
 

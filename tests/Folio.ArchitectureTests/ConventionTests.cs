@@ -8,6 +8,8 @@ public sealed partial class ConventionTests
 {
     private static readonly Assembly Api = typeof(Program).Assembly;
 
+    private static readonly Assembly Domain = typeof(Snapshot).Assembly;
+
     private static readonly string Root =
         Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 
@@ -112,6 +114,26 @@ public sealed partial class ConventionTests
         ];
 
         await Assert.That(elsewhere).IsEmpty();
+    }
+
+    [Test]
+    public async Task No_Page_Type_Names_A_Route()
+    {
+        string[] urlShaped = ["Route", "Path", "Url", "Href"];
+
+        string[] offenders =
+        [
+            .. new[] { Domain, Api }
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(type => type.Name.Contains("Page", StringComparison.Ordinal))
+                .SelectMany(type => type.GetProperties().Select(property => (Type: type, Property: property)))
+                .Where(entry => urlShaped.Any(name =>
+                    entry.Property.Name.Contains(name, StringComparison.Ordinal)))
+                .Select(entry => $"{entry.Type.Name}.{entry.Property.Name}")
+                .Order(StringComparer.Ordinal),
+        ];
+
+        await Assert.That(offenders).IsEmpty();
     }
 
     private static bool Exposes(Type type, Assembly domain)

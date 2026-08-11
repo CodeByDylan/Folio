@@ -12,16 +12,16 @@ internal sealed record SiteLinkView(
     string Url,
     string? Label);
 
-/// <summary>A site-level page.</summary>
-/// <param name="Id">Stable identifier and route fragment.</param>
-/// <param name="Title">The page title.</param>
-/// <param name="Body">The rewritten markdown body.</param>
-/// <param name="Source">Where the body came from.</param>
+/// <summary>A page the site publishes. Its sections are served by <c>/pages/{slug}</c>.</summary>
+/// <param name="Slug">Stable identity, and what the frontend builds its route from.</param>
+/// <param name="Home">Whether this is the site's entry point.</param>
+/// <param name="Nav">Whether the page belongs in the site navigation.</param>
+/// <param name="NavLabel">The label to render in navigation.</param>
 internal sealed record SitePageView(
-    string Id,
-    string? Title,
-    string? Body,
-    [property: WireEnum(typeof(SectionSource))] string Source);
+    string Slug,
+    bool Home,
+    bool Nav,
+    string? NavLabel);
 
 /// <summary>Maps the resolved site onto its wire shapes.</summary>
 internal static class SiteMapping
@@ -59,16 +59,16 @@ internal static class SiteMapping
         return strings;
     }
 
-    /// <summary>Maps site pages.</summary>
+    /// <summary>Maps the page list, without the sections each page renders.</summary>
     /// <param name="site">The resolved site.</param>
     /// <param name="scope">Where fallbacks are recorded.</param>
     /// <returns>The wire shapes.</returns>
-    public static IReadOnlyList<SitePageView> Sections(ResolvedSite site, ProvenanceScope scope) =>
+    public static IReadOnlyList<SitePageView> Pages(ResolvedSite site, ProvenanceScope scope) =>
     [
-        .. site.Sections.Select((section, index) => new SitePageView(
-            section.Id,
-            scope.Take(section.Title, $"/sections/{index}/title"),
-            scope.Take(section.Body, $"/sections/{index}/body"),
-            Wire.Lower(section.Source))),
+        .. site.Pages.Select((page, index) => new SitePageView(
+            page.Slug.Value,
+            page.IsHome,
+            page.InNav,
+            scope.Take(page.NavLabel, $"/pages/{index}/navLabel"))),
     ];
 }
