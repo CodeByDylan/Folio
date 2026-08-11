@@ -30,54 +30,155 @@
         {
           "id": "intro",
           "type": "Hero",
-          "title": null,
-          "body": null,
-          "source": "Folio",
-          "hero": {
-            "headline": {
-              "value": "Ik bouw backendsystemen",
-              "locale": "nl",
-              "isFallback": false
+          "headline": {
+            "value": "Ik bouw backendsystemen",
+            "locale": "nl",
+            "isFallback": false
+          },
+          "subheadline": {
+            "value": "C#, .NET en het gereedschap eromheen",
+            "locale": "nl",
+            "isFallback": false
+          },
+          "actions": [
+            {
+              "id": "work",
+              "url": "/projects",
+              "label": {
+                "value": "Bekijk mijn werk",
+                "locale": "nl",
+                "isFallback": false
+              }
             },
-            "subheadline": {
-              "value": "C#, .NET en het gereedschap eromheen",
-              "locale": "nl",
-              "isFallback": false
-            },
-            "actions": [
-              {
-                "id": "work",
-                "url": "/projects",
-                "label": {
-                  "value": "Bekijk mijn werk",
-                  "locale": "nl",
-                  "isFallback": false
-                }
+            {
+              "id": "github",
+              "url": "https://github.com/dutchy",
+              "label": {
+                "value": "GitHub",
+                "locale": "nl",
+                "isFallback": false
+              }
+            }
+          ],
+          "media": [
+            {
+              "role": "image",
+              "url": "https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/portrait.png",
+              "width": 1200,
+              "height": 1200,
+              "alt": {
+                "value": "Een portret van Dutchy",
+                "locale": "nl",
+                "isFallback": false
+              }
+            }
+          ]
+        },
+        {
+          "id": "stack",
+          "type": "Skills",
+          "categories": [
+            {
+              "id": "languages",
+              "label": {
+                "value": "Talen",
+                "locale": "nl",
+                "isFallback": false
               },
-              {
-                "id": "github",
-                "url": "https://github.com/dutchy",
-                "label": {
-                  "value": "GitHub",
-                  "locale": "nl",
-                  "isFallback": false
+              "skills": [
+                {
+                  "id": "rust",
+                  "level": "Expert",
+                  "label": {
+                    "value": "Rust",
+                    "locale": "nl",
+                    "isFallback": false
+                  }
+                },
+                {
+                  "id": "csharp",
+                  "level": "Proficient",
+                  "label": {
+                    "value": "C#",
+                    "locale": "nl",
+                    "isFallback": false
+                  }
                 }
-              }
-            ],
-            "media": [
-              {
-                "role": "image",
-                "url": "https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/portrait.png",
-                "width": 1200,
-                "height": 1200,
-                "alt": {
-                  "value": "Een portret van Dutchy",
-                  "locale": "nl",
-                  "isFallback": false
+              ]
+            },
+            {
+              "id": "tools",
+              "label": {
+                "value": "Gereedschap",
+                "locale": "nl",
+                "isFallback": false
+              },
+              "skills": [
+                {
+                  "id": "docker",
+                  "level": "Familiar",
+                  "label": {
+                    "value": "Docker",
+                    "locale": "nl",
+                    "isFallback": false
+                  }
                 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "faq",
+          "type": "Qa",
+          "questions": [
+            {
+              "id": "why",
+              "question": {
+                "value": "Waarom bestaat dit?",
+                "locale": "nl",
+                "isFallback": false
+              },
+              "answer": {
+                "value": "Omdat een portfolio zijn eigen repositories moet lezen.",
+                "locale": "nl",
+                "isFallback": false
               }
-            ]
+            },
+            {
+              "id": "cost",
+              "question": {
+                "value": "Wat kost het?",
+                "locale": "nl",
+                "isFallback": false
+              },
+              "answer": null
+            }
+          ]
+        },
+        {
+          "id": "reach",
+          "type": "Contact",
+          "heading": {
+            "value": "Neem contact op",
+            "locale": "nl",
+            "isFallback": false
+          },
+          "blurb": {
+            "value": "Ik lees alles.",
+            "locale": "nl",
+            "isFallback": false
           }
+        },
+        {
+          "id": "work",
+          "type": "Projects",
+          "heading": {
+            "value": "Uitgelicht werk",
+            "locale": "nl",
+            "isFallback": false
+          },
+          "featured": true,
+          "limit": 2
         },
         {
           "id": "about",
@@ -92,8 +193,7 @@
             "locale": "nl",
             "isFallback": false
           },
-          "source": "Folio",
-          "hero": null
+          "source": "Folio"
         }
       ]
     }
@@ -198,8 +298,7 @@
             "locale": "nl",
             "isFallback": false
           },
-          "source": "Folio",
-          "hero": null
+          "source": "Folio"
         },
         {
           "id": "architecture",
@@ -214,8 +313,7 @@
             "locale": "en",
             "isFallback": true
           },
-          "source": "Folio",
-          "hero": null
+          "source": "Folio"
         }
       ],
       "languages": [
@@ -330,8 +428,7 @@
             "locale": "en",
             "isFallback": true
           },
-          "source": "Folio",
-          "hero": null
+          "source": "Folio"
         }
       ],
       "languages": [

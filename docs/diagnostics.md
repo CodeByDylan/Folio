@@ -141,6 +141,13 @@ the slug derived from its directory, since it has no `project.toml` to declare o
 | `section.file_unexpected` | warning | Prose with no `file`, or a typed section declaring one; the section is dropped |
 | `section.data_unreadable` | warning | A typed section's `sections/<id>.toml` is missing or unparseable; the section is dropped |
 
+### `qa.*` — questions and answers
+
+| Code | Severity | Behaviour |
+| --- | --- | --- |
+| `qa.entry_missing` | warning | A declared entry has no `## <id>` heading in the resolved locale; it has no answer |
+| `qa.entry_unknown` | warning | Content in the answers file that no declared entry claims; it is ignored |
+
 ### `page.*` — site composition
 
 | Code | Severity | Behaviour |

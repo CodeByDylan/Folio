@@ -18,7 +18,7 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
     /// <param name="context">Where the files come from, for link rewriting.</param>
     /// <param name="sink">A sink scoped to the owner.</param>
     /// <returns>The resolved sections, minus any missing in every locale.</returns>
-    public IReadOnlyList<ResolvedSection> Resolve(
+    public IReadOnlyList<ResolvedProseSection> Resolve(
         IReadOnlyList<SectionEntry> sections,
         FileSet files,
         string folioRoot,
@@ -27,11 +27,11 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
         Func<string, MarkdownContext> context,
         DiagnosticSink sink)
     {
-        List<ResolvedSection> resolved = [];
+        List<ResolvedProseSection> resolved = [];
 
         foreach (SectionEntry section in sections)
         {
-            ResolvedSection? one = ResolveOne(
+            ResolvedProseSection? one = ResolveOne(
                 section, resolved.Count, sections, files, folioRoot, locales, requested, context, sink);
 
             if (one is not null)
@@ -51,7 +51,7 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
     /// <param name="context">Where the file comes from, for link rewriting.</param>
     /// <param name="sink">A sink scoped to the project.</param>
     /// <returns>The section, or <see langword="null" /> if the repository has no README.</returns>
-    public ResolvedSection? ResolveReadme(
+    public ResolvedProseSection? ResolveReadme(
         FileSet files,
         string projectPath,
         LocaleTag defaultLocale,
@@ -81,15 +81,14 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
 
         bool fallback = !requested.Equals(defaultLocale);
 
-        return new ResolvedSection(
+        return new ResolvedProseSection(
             "readme",
-            SectionType.Prose,
             new Localized<string>(rewritten.Title ?? "Readme", defaultLocale, fallback),
             new Localized<string>(rewritten.Body, defaultLocale, fallback),
             SectionSource.Readme);
     }
 
-    private ResolvedSection? ResolveOne(
+    private ResolvedProseSection? ResolveOne(
         SectionEntry section,
         int index,
         IReadOnlyList<SectionEntry> siblings,
@@ -155,9 +154,8 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
                     pointer: $"/sections/{index}/body");
             }
 
-            return new ResolvedSection(
+            return new ResolvedProseSection(
                 section.Id,
-                section.Type,
                 new Localized<string>(rewritten.Title ?? Humanize(section.Id), locale, !atRequestedLocale),
                 new Localized<string>(rewritten.Body, locale, !atRequestedLocale),
                 SectionSource.Folio);

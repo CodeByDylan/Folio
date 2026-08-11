@@ -180,6 +180,22 @@ internal sealed class FolioApp(
                 type = "hero"
 
                 [[site.sections]]
+                id   = "stack"
+                type = "skills"
+
+                [[site.sections]]
+                id   = "faq"
+                type = "qa"
+
+                [[site.sections]]
+                id   = "reach"
+                type = "contact"
+
+                [[site.sections]]
+                id   = "work"
+                type = "projects"
+
+                [[site.sections]]
                 id   = "about"
                 type = "prose"
                 file = "about.md"
@@ -187,7 +203,7 @@ internal sealed class FolioApp(
                 [[site.pages]]
                 slug     = "home"
                 home     = true
-                sections = ["intro", "about"]
+                sections = ["intro", "stack", "faq", "reach", "work", "about"]
                 """,
             [".folio/sections/intro.toml"] = """
                 version = 1
@@ -196,12 +212,26 @@ internal sealed class FolioApp(
                 id  = "work"
                 url = "https://dutchy.dev/projects"
                 """,
+            [".folio/sections/stack.toml"] = """
+                version = 1
+
+                [[categories]]
+                id = "languages"
+
+                [[categories.skills]]
+                id    = "rust"
+                level = "expert"
+                """,
+            [".folio/sections/faq.toml"] = "version = 1\n\n[[entries]]\nid = \"why\"\n",
+            [".folio/content/en/faq.md"] = "## why\n\nBecause it should.\n",
+            [".folio/content/nl/faq.md"] = "## why\n\nOmdat het moet.\n",
+            [".folio/sections/work.toml"] = "version = 1\n\nfeatured = true\nlimit = 3\n",
             [".folio/projects.toml"] = "version = 1\n\n[[projects]]\nrepo = \"folio\"\nfeatured = true\n",
             [".folio/tags.toml"] = "version = 1\n\n[[tags]]\nid = \"rust\"\nkind = \"language\"\n",
             [".folio/locales/en.toml"] =
-                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Home\"\nsection.intro.headline = \"I build things\"\nsection.intro.action.work = \"See my work\"\n",
+                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Home\"\nsection.intro.headline = \"I build things\"\nsection.intro.action.work = \"See my work\"\nsection.stack.category.languages = \"Languages\"\nsection.stack.skill.rust = \"Rust\"\nsection.faq.question.why = \"Why?\"\nsection.reach.heading = \"Get in touch\"\nsection.work.heading = \"Featured work\"\n",
             [".folio/locales/nl.toml"] =
-                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Start\"\nsection.intro.headline = \"Ik bouw dingen\"\nsection.intro.action.work = \"Bekijk mijn werk\"\n",
+                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Start\"\nsection.intro.headline = \"Ik bouw dingen\"\nsection.intro.action.work = \"Bekijk mijn werk\"\nsection.stack.category.languages = \"Talen\"\nsection.stack.skill.rust = \"Rust\"\nsection.faq.question.why = \"Why?\"\n",
             [".folio/content/en/about.md"] = "# About\n\nI build things.\n",
             [".folio/content/nl/about.md"] = "# Over mij\n\nIk bouw dingen.\n",
         };

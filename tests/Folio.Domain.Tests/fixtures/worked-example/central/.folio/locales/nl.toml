@@ -16,3 +16,17 @@ section.intro.subheadline     = "C#, .NET en het gereedschap eromheen"
 section.intro.action.work     = "Bekijk mijn werk"
 section.intro.action.github   = "GitHub"
 section.intro.media.image.alt = "Een portret van Dutchy"
+
+section.stack.category.languages = "Talen"
+section.stack.category.tools     = "Gereedschap"
+section.stack.skill.rust         = "Rust"
+section.stack.skill.csharp       = "C#"
+section.stack.skill.docker       = "Docker"
+
+section.faq.question.why  = "Waarom bestaat dit?"
+section.faq.question.cost = "Wat kost het?"
+
+section.reach.heading = "Neem contact op"
+section.reach.blurb   = "Ik lees alles."
+
+section.work.heading = "Uitgelicht werk"

@@ -89,24 +89,29 @@ public sealed class GoldenFileTests
         }),
     };
 
-    private static object Section(ResolvedSection section) => new
+    private static object Section(ResolvedSection section) => section switch
     {
-        section.Id,
-        Type = section.Type.ToString(),
-        Title = Value(section.Title),
-        Body = Value(section.Body),
-        Source = section.Source.ToString(),
-        Hero = section.Hero is null ? null : new
+        ResolvedProseSection prose => new
         {
-            Headline = Value(section.Hero.Headline),
-            Subheadline = Value(section.Hero.Subheadline),
-            Actions = section.Hero.Actions.Select(action => new
+            prose.Id,
+            Type = prose.Type.ToString(),
+            Title = Value(prose.Title),
+            Body = Value(prose.Body),
+            Source = prose.Source.ToString(),
+        },
+        ResolvedHeroSection hero => new
+        {
+            hero.Id,
+            Type = hero.Type.ToString(),
+            Headline = Value(hero.Headline),
+            Subheadline = Value(hero.Subheadline),
+            Actions = hero.Actions.Select(action => new
             {
                 action.Id,
                 action.Url,
                 Label = Value(action.Label),
             }),
-            Media = section.Hero.Media.Select(media => new
+            Media = hero.Media.Select(media => new
             {
                 media.Role,
                 Url = media.Url.ToString(),
@@ -115,6 +120,49 @@ public sealed class GoldenFileTests
                 Alt = Value(media.Alt),
             }),
         },
+        ResolvedSkillsSection skills => new
+        {
+            skills.Id,
+            Type = skills.Type.ToString(),
+            Categories = skills.Categories.Select(category => new
+            {
+                category.Id,
+                Label = Value(category.Label),
+                Skills = category.Skills.Select(skill => new
+                {
+                    skill.Id,
+                    Level = skill.Level.ToString(),
+                    Label = Value(skill.Label),
+                }),
+            }),
+        },
+        ResolvedQaSection qa => new
+        {
+            qa.Id,
+            Type = qa.Type.ToString(),
+            Questions = qa.Questions.Select(question => new
+            {
+                question.Id,
+                Question = Value(question.Question),
+                Answer = Value(question.Answer),
+            }),
+        },
+        ResolvedContactSection contact => new
+        {
+            contact.Id,
+            Type = contact.Type.ToString(),
+            Heading = Value(contact.Heading),
+            Blurb = Value(contact.Blurb),
+        },
+        ResolvedProjectsSection projects => new
+        {
+            projects.Id,
+            Type = projects.Type.ToString(),
+            Heading = Value(projects.Heading),
+            projects.Featured,
+            projects.Limit,
+        },
+        _ => throw new NotSupportedException(section.GetType().Name),
     };
 
     private static object? Value(Localized<string>? localized) =>

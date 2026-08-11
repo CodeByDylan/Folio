@@ -1192,13 +1192,57 @@
           },
           {
             "$ref": "#/components/schemas/PageSectionViewHeroSectionView"
+          },
+          {
+            "$ref": "#/components/schemas/PageSectionViewSkillsSectionView"
+          },
+          {
+            "$ref": "#/components/schemas/PageSectionViewQaSectionView"
+          },
+          {
+            "$ref": "#/components/schemas/PageSectionViewContactSectionView"
+          },
+          {
+            "$ref": "#/components/schemas/PageSectionViewProjectsSectionView"
           }
         ],
         "discriminator": {
           "propertyName": "type",
           "mapping": {
             "prose": "#/components/schemas/PageSectionViewProseSectionView",
-            "hero": "#/components/schemas/PageSectionViewHeroSectionView"
+            "hero": "#/components/schemas/PageSectionViewHeroSectionView",
+            "skills": "#/components/schemas/PageSectionViewSkillsSectionView",
+            "qa": "#/components/schemas/PageSectionViewQaSectionView",
+            "contact": "#/components/schemas/PageSectionViewContactSectionView",
+            "projects": "#/components/schemas/PageSectionViewProjectsSectionView"
+          }
+        }
+      },
+      "PageSectionViewContactSectionView": {
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "contact"
+            ],
+            "type": "string"
+          },
+          "heading": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "blurb": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
           }
         }
       },
@@ -1244,6 +1288,41 @@
           }
         }
       },
+      "PageSectionViewProjectsSectionView": {
+        "required": [
+          "featured",
+          "id"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "projects"
+            ],
+            "type": "string"
+          },
+          "heading": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
       "PageSectionViewProseSectionView": {
         "required": [
           "source",
@@ -1274,6 +1353,52 @@
               "readme"
             ],
             "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "PageSectionViewQaSectionView": {
+        "required": [
+          "questions",
+          "id"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "qa"
+            ],
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionView"
+            }
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "PageSectionViewSkillsSectionView": {
+        "required": [
+          "categories",
+          "id"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "skills"
+            ],
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillCategoryView"
+            }
           },
           "id": {
             "type": "string"
@@ -1442,6 +1567,29 @@
           }
         }
       },
+      "QuestionView": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "question": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "answer": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RefreshView": {
         "required": [
           "attemptedAt",
@@ -1604,6 +1752,56 @@
             "type": "boolean"
           },
           "navLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SkillCategoryView": {
+        "required": [
+          "id",
+          "skills"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            }
+          }
+        }
+      },
+      "SkillView": {
+        "required": [
+          "id",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "familiar",
+              "proficient",
+              "expert"
+            ],
+            "type": "string"
+          },
+          "label": {
             "type": [
               "null",
               "string"

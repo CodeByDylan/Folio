@@ -116,6 +116,31 @@ public enum SectionType
 
     /// <summary>A headline, a subheadline, calls to action and an optional portrait.</summary>
     Hero,
+
+    /// <summary>Skills, grouped into categories and rated.</summary>
+    Skills,
+
+    /// <summary>Questions with their answers.</summary>
+    Qa,
+
+    /// <summary>An invitation to get in touch. The form itself is the frontend's.</summary>
+    Contact,
+
+    /// <summary>A selection of the portfolio, which the frontend already holds.</summary>
+    Projects,
+}
+
+/// <summary>How well a skill is known. Ordered from least to most.</summary>
+public enum SkillLevel
+{
+    /// <summary>Worked with it.</summary>
+    Familiar,
+
+    /// <summary>Works with it without help.</summary>
+    Proficient,
+
+    /// <summary>Knows its edges, and teaches it.</summary>
+    Expert,
 }
 
 /// <summary>Where a section's body was authored.</summary>
