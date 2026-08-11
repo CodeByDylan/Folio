@@ -108,6 +108,13 @@ public enum TagKind
     Tool,
 }
 
+/// <summary>What a section holds, and so what renders it.</summary>
+public enum SectionType
+{
+    /// <summary>Authored markdown.</summary>
+    Prose,
+}
+
 /// <summary>Where a section's body was authored.</summary>
 public enum SectionSource
 {

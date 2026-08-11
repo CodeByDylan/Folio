@@ -38,7 +38,14 @@ public sealed class GoldenFileTests
             Url = link.Url.ToString(),
             Label = Value(link.Label),
         }),
-        Sections = site.Sections.Select(Section),
+        Pages = site.Pages.Select(page => new
+        {
+            Slug = page.Slug.Value,
+            page.IsHome,
+            page.InNav,
+            NavLabel = Value(page.NavLabel),
+            Sections = page.Sections.Select(Section),
+        }),
         Projects = site.Projects.Select(project => new
         {
             Slug = project.Slug.Value,
@@ -85,6 +92,7 @@ public sealed class GoldenFileTests
     private static object Section(ResolvedSection section) => new
     {
         section.Id,
+        Type = section.Type.ToString(),
         Title = Value(section.Title),
         Body = Value(section.Body),
         Source = section.Source.ToString(),

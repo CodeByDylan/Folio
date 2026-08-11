@@ -177,12 +177,20 @@ internal sealed class FolioApp(
 
                 [[site.sections]]
                 id   = "about"
+                type = "prose"
                 file = "about.md"
+
+                [[site.pages]]
+                slug     = "home"
+                home     = true
+                sections = ["about"]
                 """,
             [".folio/projects.toml"] = "version = 1\n\n[[projects]]\nrepo = \"folio\"\nfeatured = true\n",
             [".folio/tags.toml"] = "version = 1\n\n[[tags]]\nid = \"rust\"\nkind = \"language\"\n",
-            [".folio/locales/en.toml"] = "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\n",
-            [".folio/locales/nl.toml"] = "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\n",
+            [".folio/locales/en.toml"] =
+                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Home\"\n",
+            [".folio/locales/nl.toml"] =
+                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Start\"\n",
             [".folio/content/en/about.md"] = "# About\n\nI build things.\n",
             [".folio/content/nl/about.md"] = "# Over mij\n\nIk bouw dingen.\n",
         };

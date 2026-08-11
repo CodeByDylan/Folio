@@ -107,6 +107,144 @@
         }
       }
     },
+    "/v1/pages/{slug}": {
+      "get": {
+        "tags": [
+          "Folio.Api"
+        ],
+        "operationId": "GetPage",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPageResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "tags": [
+          "Folio.Api"
+        ],
+        "operationId": "GetPage",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPageResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects": {
       "get": {
         "tags": [
@@ -541,6 +679,49 @@
           }
         }
       },
+      "GetPageResponse": {
+        "required": [
+          "requestedLocale",
+          "locale",
+          "slug",
+          "home",
+          "sections",
+          "provenance"
+        ],
+        "type": "object",
+        "properties": {
+          "requestedLocale": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "home": {
+            "type": "boolean"
+          },
+          "navLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PageSectionView"
+            }
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ProvenanceEntry"
+            }
+          }
+        }
+      },
       "GetProjectResponse": {
         "required": [
           "requestedLocale",
@@ -673,7 +854,7 @@
           "defaultLocale",
           "locales",
           "links",
-          "sections",
+          "pages",
           "strings",
           "provenance"
         ],
@@ -715,7 +896,7 @@
               "$ref": "#/components/schemas/SiteLinkView"
             }
           },
-          "sections": {
+          "pages": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SitePageView"
@@ -937,6 +1118,44 @@
             "items": {
               "$ref": "#/components/schemas/ReleaseView"
             }
+          }
+        }
+      },
+      "PageSectionView": {
+        "required": [
+          "id",
+          "type",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "prose"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "body": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "source": {
+            "enum": [
+              "folio",
+              "readme"
+            ],
+            "type": "string"
           }
         }
       },
@@ -1248,32 +1467,26 @@
       },
       "SitePageView": {
         "required": [
-          "id",
-          "source"
+          "slug",
+          "home",
+          "nav"
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "slug": {
             "type": "string"
           },
-          "title": {
+          "home": {
+            "type": "boolean"
+          },
+          "nav": {
+            "type": "boolean"
+          },
+          "navLabel": {
             "type": [
               "null",
               "string"
             ]
-          },
-          "body": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "source": {
-            "enum": [
-              "folio",
-              "readme"
-            ],
-            "type": "string"
           }
         }
       },

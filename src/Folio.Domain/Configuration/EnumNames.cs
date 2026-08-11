@@ -27,9 +27,17 @@ internal static class EnumNames
 
     private static readonly FrozenDictionary<string, RelationType> RelationTypes = RelationVocabulary.Declarable;
 
+    private static readonly FrozenDictionary<string, SectionType> SectionTypes =
+        Map(("prose", SectionType.Prose));
+
     private static readonly FrozenDictionary<string, TagKind> TagKinds =
         Map(("language", TagKind.Language), ("framework", TagKind.Framework),
             ("domain", TagKind.Domain), ("tool", TagKind.Tool));
+
+    /// <summary>Gets the locale key for a page's navigation label.</summary>
+    /// <param name="slug">The page slug.</param>
+    /// <returns>The dotted key its label is declared under.</returns>
+    public static string PageKey(Slug slug) => $"page.{slug.Value}";
 
     /// <summary>Gets the locale key for a link type.</summary>
     /// <param name="type">The link type.</param>
@@ -80,6 +88,14 @@ internal static class EnumNames
     /// <returns>The relation type, or <see langword="null" /> if absent or unknown.</returns>
     public static RelationType? Relation(TomlTableReader table, string key, DiagnosticSink sink) =>
         Read(RelationTypes, table, key, sink);
+
+    /// <summary>Reads a section type.</summary>
+    /// <param name="table">The table to read from.</param>
+    /// <param name="key">The key to read.</param>
+    /// <param name="sink">Where to report an unknown value.</param>
+    /// <returns>The type, or <see langword="null" /> if absent or unknown.</returns>
+    public static SectionType? Section(TomlTableReader table, string key, DiagnosticSink sink) =>
+        Read(SectionTypes, table, key, sink);
 
     /// <summary>Reads a tag kind.</summary>
     /// <param name="table">The table to read from.</param>

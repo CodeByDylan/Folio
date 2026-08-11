@@ -161,7 +161,7 @@ public sealed class WorkedExampleTests
     {
         Snapshot snapshot = Resolve();
 
-        ResolvedSection about = snapshot.Localizations[Dutch].Sections.Single();
+        ResolvedSection about = snapshot.Localizations[Dutch].Pages.Single().Sections.Single();
 
         await Assert.That(about.Id).IsEqualTo("about");
         await Assert.That(about.Title!.Value).IsEqualTo("Over mij");
@@ -171,7 +171,7 @@ public sealed class WorkedExampleTests
     [Test]
     public async Task Central_Section_Images_Are_Pinned_To_The_Central_Repository()
     {
-        ResolvedSection about = Resolve().Localizations[English].Sections.Single();
+        ResolvedSection about = Resolve().Localizations[English].Pages.Single().Sections.Single();
 
         await Assert.That(about.Body!.Value)
             .Contains("https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/me.png");

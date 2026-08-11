@@ -224,7 +224,64 @@ public sealed class DiagnosticCoverageTests
             .Diagnostics(),
 
         [DiagnosticCodes.PortfolioEmpty] = () => Portfolio.Valid().Diagnostics(),
+
+        [DiagnosticCodes.SectionUnreferenced] = () => Site("""
+            [[site.sections]]
+            id   = "about"
+            file = "about.md"
+            """),
+
+        [DiagnosticCodes.PageSlugInvalid] = () => Site("""
+            [[site.pages]]
+            slug = "Not A Slug"
+            """),
+
+        [DiagnosticCodes.PageDuplicateSlug] = () => Site("""
+            [[site.pages]]
+            slug = "home"
+            home = true
+
+            [[site.pages]]
+            slug = "home"
+            """),
+
+        [DiagnosticCodes.PageUnknownSection] = () => Site("""
+            [[site.pages]]
+            slug     = "home"
+            home     = true
+            sections = ["nope"]
+            """),
+
+        [DiagnosticCodes.PageNoHome] = () => Site("""
+            [[site.pages]]
+            slug = "about"
+            """),
+
+        [DiagnosticCodes.PageDuplicateHome] = () => Site("""
+            [[site.pages]]
+            slug = "home"
+            home = true
+
+            [[site.pages]]
+            slug = "about"
+            home = true
+            """),
     }.ToFrozenDictionary(StringComparer.Ordinal);
+
+    /// <summary>Resolves a portfolio whose <c>site.toml</c> carries one extra block.</summary>
+    private static IReadOnlyList<Diagnostic> Site(string extra) => Portfolio.Valid()
+        .Central(".folio/site.toml", $"""
+            version = 1
+
+            [site]
+            url            = "https://dutchy.dev"
+            default_locale = "en"
+            locales        = ["en"]
+            owner          = "dutchy"
+
+            {extra}
+            """)
+        .Diagnostics();
 
     [Test]
     [MethodDataSource(nameof(Codes))]
