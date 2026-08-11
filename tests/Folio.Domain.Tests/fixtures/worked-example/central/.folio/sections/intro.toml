@@ -1,0 +1,12 @@
+version = 1
+
+[media]
+image = "media/portrait.png"
+
+[[actions]]
+id  = "work"
+url = "https://dutchy.dev/projects"
+
+[[actions]]
+id  = "github"
+url = "https://github.com/dutchy"

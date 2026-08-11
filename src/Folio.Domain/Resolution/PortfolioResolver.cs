@@ -244,6 +244,11 @@ public sealed class PortfolioResolver
         Dictionary<string, ResolvedSection> byId = siteSections.ToDictionary(
             section => section.Id, StringComparer.Ordinal);
 
+        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Hero is not null))
+        {
+            byId[entry.Id] = ResolveHero(entry, central, config, centralStrings, locale, sink);
+        }
+
         return new ResolvedSite(
             config.Site.Url,
             config.Site.DefaultLocale,
@@ -264,6 +269,79 @@ public sealed class PortfolioResolver
                     .OfType<ResolvedSection>()]))],
             projects,
             Strings(centralStrings, locale, sink));
+    }
+
+    private static ResolvedSection ResolveHero(
+        SectionEntry entry,
+        CentralInput central,
+        CentralConfig config,
+        LocaleResolver strings,
+        LocaleTag locale,
+        DiagnosticSink sink)
+    {
+        HeroConfig hero = entry.Hero!;
+        SitePath site = new(config.Site.Url);
+        string prefix = $"section.{entry.Id}";
+
+        List<ResolvedHeroAction> actions = [];
+
+        foreach (HeroActionEntry action in hero.Actions)
+        {
+            // A link to this site is served as a path, the same rule markdown links follow.
+            string url = site.TryMatch(action.Url, out string path) ? path : action.Url.ToString();
+
+            actions.Add(new ResolvedHeroAction(
+                action.Id,
+                url,
+                strings.Resolve(
+                    $"{prefix}.action.{action.Id}",
+                    locale,
+                    sink,
+                    $"/actions/{actions.Count}/label")));
+        }
+
+        List<ResolvedMedia> media = [];
+
+        foreach ((string role, string reference) in hero.Media.OrderBy(item => item.Key, StringComparer.Ordinal))
+        {
+            string path = $".folio/{reference.TrimStart('/')}";
+
+            if (!central.MediaPaths.Contains(path))
+            {
+                sink.Warning(
+                    DiagnosticCodes.MediaNotFound,
+                    $"Media '{role}' on '{entry.Id}' ({reference}) was not found at the pinned commit.");
+                continue;
+            }
+
+            central.MediaSizes.TryGetValue(path, out MediaSize? size);
+
+            if (size is null)
+            {
+                sink.Warning(
+                    DiagnosticCodes.MediaDimensionsUnreadable,
+                    $"Media '{role}' on '{entry.Id}' has no readable image header; dimensions were omitted.");
+            }
+
+            media.Add(new ResolvedMedia(
+                role,
+                RawContentUrl.For(central.Repo, central.PinnedSha, path),
+                size?.Width,
+                size?.Height,
+                strings.Resolve($"{prefix}.media.{role}.alt", locale, sink, $"/media/{media.Count}/alt")));
+        }
+
+        return new ResolvedSection(
+            entry.Id,
+            entry.Type,
+            null,
+            null,
+            SectionSource.Folio,
+            new ResolvedHero(
+                strings.Resolve($"{prefix}.headline", locale, sink, "/headline"),
+                strings.Resolve($"{prefix}.subheadline", locale, sink, "/subheadline"),
+                actions,
+                media));
     }
 
     /// <summary>Resolves every declared interface string for one locale.</summary>
@@ -469,6 +547,23 @@ public sealed class PortfolioResolver
         foreach (PageEntry page in config.Site.Pages)
         {
             _ = central.Add(EnumNames.PageKey(page.Slug));
+        }
+
+        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Hero is not null))
+        {
+            string prefix = $"section.{section.Id}";
+            _ = central.Add($"{prefix}.headline");
+            _ = central.Add($"{prefix}.subheadline");
+
+            foreach (HeroActionEntry action in section.Hero!.Actions)
+            {
+                _ = central.Add($"{prefix}.action.{action.Id}");
+            }
+
+            foreach (string role in section.Hero.Media.Keys)
+            {
+                _ = central.Add($"{prefix}.media.{role}.alt");
+            }
         }
 
         foreach (string id in config.Tags.Keys)

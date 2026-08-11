@@ -231,6 +231,17 @@ public sealed class DiagnosticCoverageTests
             file = "about.md"
             """),
 
+        [DiagnosticCodes.SectionFileUnexpected] = () => Site("""
+            [[site.sections]]
+            id = "about"
+            """),
+
+        [DiagnosticCodes.SectionDataUnreadable] = () => Site("""
+            [[site.sections]]
+            id   = "hero"
+            type = "hero"
+            """),
+
         [DiagnosticCodes.PageSlugInvalid] = () => Site("""
             [[site.pages]]
             slug = "Not A Slug"

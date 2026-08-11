@@ -25,6 +25,8 @@ public static class StoredInputsSerializer
                 inputs.CentralRepo,
                 inputs.CentralSha,
                 Files(inputs.Central),
+                new Dictionary<string, MediaSize>(inputs.CentralMediaSizes, StringComparer.Ordinal),
+                [.. inputs.CentralMediaPaths.Order(StringComparer.Ordinal)],
                 [.. inputs.Repos.Select(repo => new RepoPayload(
                     repo.Repo,
                     repo.Path,
@@ -69,6 +71,8 @@ public static class StoredInputsSerializer
                 payload.CentralRepo,
                 payload.CentralSha,
                 Set(payload.Central),
+                payload.CentralMediaSizes ?? new Dictionary<string, MediaSize>(StringComparer.Ordinal),
+                new HashSet<string>(payload.CentralMediaPaths ?? [], StringComparer.Ordinal),
                 [.. payload.Repos.Select(repo => new RepoInput(
                     repo.Repo,
                     repo.Path,
@@ -121,6 +125,8 @@ public static class StoredInputsSerializer
         string? CentralRepo,
         string? CentralSha,
         Dictionary<string, byte[]>? Central,
+        Dictionary<string, MediaSize>? CentralMediaSizes,
+        List<string>? CentralMediaPaths,
         List<RepoPayload>? Repos,
         DateTimeOffset CapturedAt);
 

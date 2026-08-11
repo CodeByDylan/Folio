@@ -176,6 +176,10 @@ internal sealed class FolioApp(
                 url  = "https://github.com/dutchy"
 
                 [[site.sections]]
+                id   = "intro"
+                type = "hero"
+
+                [[site.sections]]
                 id   = "about"
                 type = "prose"
                 file = "about.md"
@@ -183,14 +187,21 @@ internal sealed class FolioApp(
                 [[site.pages]]
                 slug     = "home"
                 home     = true
-                sections = ["about"]
+                sections = ["intro", "about"]
+                """,
+            [".folio/sections/intro.toml"] = """
+                version = 1
+
+                [[actions]]
+                id  = "work"
+                url = "https://dutchy.dev/projects"
                 """,
             [".folio/projects.toml"] = "version = 1\n\n[[projects]]\nrepo = \"folio\"\nfeatured = true\n",
             [".folio/tags.toml"] = "version = 1\n\n[[tags]]\nid = \"rust\"\nkind = \"language\"\n",
             [".folio/locales/en.toml"] =
-                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Home\"\n",
+                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Home\"\nsection.intro.headline = \"I build things\"\nsection.intro.action.work = \"See my work\"\n",
             [".folio/locales/nl.toml"] =
-                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Start\"\n",
+                "site.title = \"Dutchy\"\nlink.github = \"GitHub\"\ntag.rust = \"Rust\"\npage.home = \"Start\"\nsection.intro.headline = \"Ik bouw dingen\"\nsection.intro.action.work = \"Bekijk mijn werk\"\n",
             [".folio/content/en/about.md"] = "# About\n\nI build things.\n",
             [".folio/content/nl/about.md"] = "# Over mij\n\nIk bouw dingen.\n",
         };
@@ -220,6 +231,8 @@ internal sealed class FolioApp(
             "dutchy/portfolio",
             "central-sha",
             Set(central),
+            new Dictionary<string, MediaSize>(StringComparer.Ordinal),
+            new HashSet<string>(StringComparer.Ordinal),
             [
                 new RepoInput(
                     "dutchy/folio",

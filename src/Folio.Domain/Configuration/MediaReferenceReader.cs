@@ -43,6 +43,41 @@ public static class MediaReferenceReader
         return paths;
     }
 
+    /// <summary>Reads the repo-relative paths of media declared by the central repository's sections.</summary>
+    /// <param name="files">The central file set.</param>
+    /// <param name="folioRoot">The path of the <c>.folio</c> directory.</param>
+    /// <returns>The declared paths, in section then role order.</returns>
+    public static IReadOnlyList<string> ReadSections(FileSet files, string folioRoot)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+
+        string prefix = $"{folioRoot}/sections/";
+        List<string> paths = [];
+
+        foreach (string file in files.Under($"{folioRoot}/sections").Order(StringComparer.Ordinal))
+        {
+            if (!file.StartsWith(prefix, StringComparison.Ordinal)
+                || !file.EndsWith(".toml", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string id = file[prefix.Length..^".toml".Length];
+
+            if (HeroConfigParser.Read(files, folioRoot, id, new DiagnosticSink()) is not { } hero)
+            {
+                continue;
+            }
+
+            foreach ((string _, string reference) in hero.Media.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+            {
+                paths.Add($"{folioRoot}/{reference.TrimStart('/')}");
+            }
+        }
+
+        return paths;
+    }
+
     /// <summary>Resolves a media reference the way markdown paths resolve.</summary>
     /// <param name="reference">The reference as authored.</param>
     /// <param name="projectPath">The project's path within the repository, empty at its root.</param>

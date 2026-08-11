@@ -28,7 +28,7 @@ internal static class EnumNames
     private static readonly FrozenDictionary<string, RelationType> RelationTypes = RelationVocabulary.Declarable;
 
     private static readonly FrozenDictionary<string, SectionType> SectionTypes =
-        Map(("prose", SectionType.Prose));
+        Map(("prose", SectionType.Prose), ("hero", SectionType.Hero));
 
     private static readonly FrozenDictionary<string, TagKind> TagKinds =
         Map(("language", TagKind.Language), ("framework", TagKind.Framework),
