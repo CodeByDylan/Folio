@@ -25,7 +25,7 @@ public sealed class SectionTypeVocabularyTests
     {
         DiagnosticSink sink = new();
 
-        await Assert.That(Read("skills", sink)).IsNull();
+        await Assert.That(Read("not-a-section-type", sink)).IsNull();
         await Assert.That(sink.Diagnostics.Select(diagnostic => diagnostic.Code))
             .Contains(DiagnosticCodes.SchemaUnknownValue);
     }

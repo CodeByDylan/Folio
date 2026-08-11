@@ -106,8 +106,17 @@ mocking library; an imaging library; a mediator or dispatcher.
   frontend URL patterns. Adding a section type is a row in `EnumNames`, a parser and a wire shape.
 - Prose is the only type whose content is a markdown file. Every other type reads
   `sections/<id>.toml` for its locale-invariant structure and `section.<id>.*` locale keys for its
-  words, so a translator never sees structure. Its wire shape is a sealed record deriving from
-  `PageSectionView`, discriminated on `type`.
+  words, so a translator never sees structure. A type with no structure to declare, such as
+  `contact`, reads no data file.
+- `ResolvedSection` is a closed union: one sealed record per type, deriving from an abstract base
+  carrying only `Id` and `Type`. A section never holds a field belonging to another type. C# cannot
+  prove a class hierarchy exhaustive, so each `switch` over the union ends in a throwing default: an
+  unmapped type builds and then fails its first test, rather than rendering as something else. Its
+  wire shape mirrors it, a sealed record deriving from `PageSectionView` discriminated on `type`.
+- A project's sections are `ResolvedProseSection`, not the base. Project prose is prose by
+  construction, and the type says so rather than a comment.
+- Folio takes no writes. A section that implies one describes it and nothing more: the frontend owns
+  the form, the transport and the credentials.
 
 ## Ingestion
 

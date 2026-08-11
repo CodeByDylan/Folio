@@ -36,7 +36,7 @@ internal sealed class ProjectResolver(SectionResolver sections)
             project.Input.PinnedSha,
             new Dictionary<string, string>(StringComparer.Ordinal));
 
-        IReadOnlyList<ResolvedSection> resolved = sections.Resolve(
+        IReadOnlyList<ResolvedProseSection> resolved = sections.Resolve(
             project.Config.Sections,
             project.Input.Files,
             project.FolioRoot,
@@ -49,7 +49,7 @@ internal sealed class ProjectResolver(SectionResolver sections)
         {
             if (project.Entry.UseReadme)
             {
-                ResolvedSection? readme = sections.ResolveReadme(
+                ResolvedProseSection? readme = sections.ResolveReadme(
                     project.Input.Files, project.Input.Path, site.DefaultLocale, locale, Context, sink);
 
                 if (readme is not null)

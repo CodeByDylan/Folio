@@ -16,3 +16,17 @@ section.intro.subheadline     = "C#, .NET and the tooling around them"
 section.intro.action.work     = "See my work"
 section.intro.action.github   = "GitHub"
 section.intro.media.image.alt = "A portrait of Dutchy"
+
+section.stack.category.languages = "Languages"
+section.stack.category.tools     = "Tools"
+section.stack.skill.rust         = "Rust"
+section.stack.skill.csharp       = "C#"
+section.stack.skill.docker       = "Docker"
+
+section.faq.question.why  = "Why does this exist?"
+section.faq.question.cost = "What does it cost?"
+
+section.reach.heading = "Get in touch"
+section.reach.blurb   = "I read everything."
+
+section.work.heading = "Featured work"

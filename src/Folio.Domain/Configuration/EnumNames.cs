@@ -28,7 +28,13 @@ internal static class EnumNames
     private static readonly FrozenDictionary<string, RelationType> RelationTypes = RelationVocabulary.Declarable;
 
     private static readonly FrozenDictionary<string, SectionType> SectionTypes =
-        Map(("prose", SectionType.Prose), ("hero", SectionType.Hero));
+        Map(("prose", SectionType.Prose), ("hero", SectionType.Hero), ("skills", SectionType.Skills),
+            ("qa", SectionType.Qa), ("contact", SectionType.Contact),
+            ("projects", SectionType.Projects));
+
+    private static readonly FrozenDictionary<string, SkillLevel> SkillLevels =
+        Map(("familiar", SkillLevel.Familiar), ("proficient", SkillLevel.Proficient),
+            ("expert", SkillLevel.Expert));
 
     private static readonly FrozenDictionary<string, TagKind> TagKinds =
         Map(("language", TagKind.Language), ("framework", TagKind.Framework),
@@ -96,6 +102,14 @@ internal static class EnumNames
     /// <returns>The type, or <see langword="null" /> if absent or unknown.</returns>
     public static SectionType? Section(TomlTableReader table, string key, DiagnosticSink sink) =>
         Read(SectionTypes, table, key, sink);
+
+    /// <summary>Reads a skill level.</summary>
+    /// <param name="table">The table to read from.</param>
+    /// <param name="key">The key to read.</param>
+    /// <param name="sink">Where to report an unknown value.</param>
+    /// <returns>The level, or <see langword="null" /> if absent or unknown.</returns>
+    public static SkillLevel? Level(TomlTableReader table, string key, DiagnosticSink sink) =>
+        Read(SkillLevels, table, key, sink);
 
     /// <summary>Reads a tag kind.</summary>
     /// <param name="table">The table to read from.</param>

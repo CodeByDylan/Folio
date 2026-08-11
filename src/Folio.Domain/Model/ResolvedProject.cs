@@ -32,7 +32,7 @@ public sealed record ResolvedProject(
     IReadOnlyList<ResolvedLink> Links,
     IReadOnlyList<ResolvedRelation> Relations,
     IReadOnlyList<ResolvedMedia> Media,
-    IReadOnlyList<ResolvedSection> Sections,
+    IReadOnlyList<ResolvedProseSection> Sections,
     RepoMetadata Metadata);
 
 /// <summary>A tag from the central vocabulary with its localized label.</summary>

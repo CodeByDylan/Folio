@@ -353,15 +353,28 @@ internal sealed class CentralConfigParser
 
         foreach (SectionEntry section in sections)
         {
-            if (section.Type is SectionType.Prose)
+            switch (section.Type)
             {
-                read.Add(section);
-                continue;
-            }
-
-            if (HeroConfigParser.Read(central, ".folio", section.Id, sink) is { } hero)
-            {
-                read.Add(section with { Hero = hero });
+                // Prose reads a markdown file and contact declares nothing; the rest carry a data file.
+                case SectionType.Prose:
+                case SectionType.Contact:
+                    read.Add(section);
+                    break;
+                case SectionType.Hero when HeroConfigParser.Read(central, ".folio", section.Id, sink) is { } hero:
+                    read.Add(section with { Hero = hero });
+                    break;
+                case SectionType.Skills when SkillsConfigParser.Read(central, ".folio", section.Id, sink) is { } skills:
+                    read.Add(section with { Skills = skills });
+                    break;
+                case SectionType.Qa when QaConfigParser.Read(central, ".folio", section.Id, sink) is { } questions:
+                    read.Add(section with { Questions = questions });
+                    break;
+                case SectionType.Projects
+                    when ProjectsConfigParser.Read(central, ".folio", section.Id, sink) is { } projects:
+                    read.Add(section with { Projects = projects });
+                    break;
+                default:
+                    break;
             }
         }
 

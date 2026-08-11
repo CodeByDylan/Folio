@@ -130,8 +130,8 @@ Pointers also give `/v1/diagnostics` a join key, so a diagnostic can name the ex
 ## Section types
 
 A site section on `/pages/{slug}` carries a `type`, and `type` is the discriminator: it says which
-component renders the section, and which fields are meaningful. `prose` is the only type today, and
-is what a section declaring no `type` becomes.
+component renders the section, and which fields are meaningful. A section declaring no `type` is
+`prose`.
 
 A `type` Folio does not know is **dropped at build time** with `schema.unknown_value`, so an authored
 typo never reaches the wire. The case a client must still handle is the other direction — a Folio
@@ -143,8 +143,31 @@ have skipped.
 | --- | --- | --- |
 | `prose` | `file`, resolved under `content/<locale>/` | `title`, `body`, `source` |
 | `hero` | `sections/<id>.toml` | `headline`, `subheadline`, `actions`, `media` |
+| `skills` | `sections/<id>.toml` | `categories`, each holding rated `skills` |
+| `qa` | `sections/<id>.toml`, answers in `content/<locale>/<id>.md` | `questions`, each with its `answer` |
+| `contact` | nothing; it has no structure to declare | `heading`, `blurb` |
+| `projects` | `sections/<id>.toml` | `heading`, `featured`, `limit` |
 
-The two shapes share only `id` and `type`; a hero has no `body`, and a prose section no `actions`.
+The shapes share only `id` and `type`; a hero has no `body`, and a prose section no `categories`.
+
+**A skill's `level` is a name, not a number** — `familiar`, `proficient` or `expert`. How many stars
+that becomes is a rendering decision, so the wire never states one. Categories and the skills within
+them are served in declaration order, which is an authored fact rather than something to sort.
+
+**A Q&A splits one markdown file per locale on its level-two headings.** `## <entry-id>` opens an
+answer and runs until the next one, so `###` and below belong to the author. The heading names the
+entry rather than asking the question: questions are short strings and live in
+`section.<id>.question.<entry-id>`, while the answers are long-form and stay in markdown. A declared
+entry with no heading, and a heading no entry declares, are both reported.
+
+**A contact section carries words, not a form.** Folio is read-only: it takes no submissions,
+describes no fields and holds no provider credentials. It says a page invites contact and supplies
+the heading and blurb; which fields to render and where a message goes are the frontend's, and belong
+to a surface that already has a server and secrets to keep.
+
+**A projects section states a selection, not the projects.** It carries `featured` and `limit`, and
+nothing else: a frontend rendering a page already holds `/v1/projects`, so repeating any of it here
+would put the same facts on the wire twice and let them disagree.
 
 **A hero's action `url` is absolute as authored, and site-relative on the wire when it points at this
 site** — the same rewriting a markdown link gets. Folio still names no route: it reports the path the
