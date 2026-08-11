@@ -8,6 +8,7 @@ All routes are under `/v1`.
 | Method | Route | Auth | Cache |
 | --- | --- | --- | --- |
 | `GET` | `/v1/site` | anonymous | `public, max-age=60` |
+| `GET` | `/v1/pages/{slug}` | anonymous | `public, max-age=60` |
 | `GET` | `/v1/projects` | anonymous | `public, max-age=60` |
 | `GET` | `/v1/projects/{slug}` | anonymous | `public, max-age=60` |
 | `GET` | `/v1/diagnostics` | anonymous | `no-store` |
@@ -24,7 +25,19 @@ section bodies. Bodies are the bulk of the payload, and serving them to the inde
 most-visited page the most expensive one. These are two response types on purpose; do not collapse
 them.
 
-`/site` carries its section bodies inline, because there are one or two of them and they are the page.
+`/site` and `/pages/{slug}` split along the same seam. `/site` is what every route needs — locale,
+links, interface strings, and the page list that becomes the navigation. `/pages/{slug}` is what one
+route needs: the sections that page renders, with their bodies. A frontend loads `/site` once per
+navigation and one page payload per route, so visiting a project never downloads the Q&A.
+
+The page list carries `slug`, `home`, `nav` and `navLabel`, and deliberately **not** the section ids
+each page holds. Stating section identity in both endpoints would mean triaging every future section
+field into "declaration" or "data" forever. `/site` answers what pages exist; `/pages/{slug}` answers
+what one contains.
+
+**Folio names no routes.** A page carries a slug and a `home` flag, not a URL. Which path a slug
+becomes, and that `home` is served at `/`, is the frontend's decision — the same reason sibling
+section links become anchors rather than routes.
 
 `/diagnostics` is separate and unlocalized because it has a different audience — you, and CI — on a
 different cadence. It is also the one endpoint that answers **without a snapshot**: when the very
@@ -113,6 +126,18 @@ forever, and would make a fully translated page pay the full wrapping cost to ca
 — the least interesting fact in the response. Reads are constant; provenance checks are rare.
 
 Pointers also give `/v1/diagnostics` a join key, so a diagnostic can name the exact field it concerns.
+
+## Section types
+
+A site section on `/pages/{slug}` carries a `type`, and `type` is the discriminator: it says which
+component renders the section, and which fields are meaningful. `prose` is the only type today, and
+is what a section declaring no `type` becomes.
+
+A `type` Folio does not know is **dropped at build time** with `schema.unknown_value`, so an authored
+typo never reaches the wire. The case a client must still handle is the other direction — a Folio
+release serving a type a deployed client predates. **Validate the union leniently.** A client that
+rejects an unknown `type` loses the whole page, navigation included, rather than one section it could
+have skipped.
 
 ## Section bodies
 

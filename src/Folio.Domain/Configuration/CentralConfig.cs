@@ -17,14 +17,23 @@ internal sealed record CentralConfig(
 /// <param name="Locales">Every locale the site publishes.</param>
 /// <param name="Owner">The default owner for unqualified repository names.</param>
 /// <param name="Links">Site-level links, in declaration order.</param>
-/// <param name="Sections">Site-level pages, in declaration order.</param>
+/// <param name="Sections">Site-level sections, in declaration order.</param>
+/// <param name="Pages">The pages composed from those sections, in declaration order.</param>
 internal sealed record SiteConfig(
     Uri Url,
     LocaleTag DefaultLocale,
     IReadOnlyList<LocaleTag> Locales,
     string Owner,
     IReadOnlyList<SiteLinkEntry> Links,
-    IReadOnlyList<SectionEntry> Sections);
+    IReadOnlyList<SectionEntry> Sections,
+    IReadOnlyList<PageEntry> Pages);
+
+/// <summary>One entry in <c>[[site.pages]]</c>.</summary>
+/// <param name="Slug">Stable identity, and what the frontend builds its route from.</param>
+/// <param name="IsHome">Whether this is the site's entry point.</param>
+/// <param name="InNav">Whether the page belongs in the site navigation.</param>
+/// <param name="Sections">The sections it renders, in declaration order.</param>
+internal sealed record PageEntry(Slug Slug, bool IsHome, bool InNav, IReadOnlyList<string> Sections);
 
 /// <summary>One entry in <c>projects.toml</c>.</summary>
 /// <param name="Repo">The repository, as <c>owner/name</c>.</param>
@@ -46,5 +55,6 @@ internal sealed record SiteLinkEntry(SiteLinkType Type, Uri Url);
 
 /// <summary>One declared section, shared by site and project configs.</summary>
 /// <param name="Id">Stable within its owner.</param>
+/// <param name="Type">What the section holds. Project sections are always prose.</param>
 /// <param name="File">The locale-agnostic file name under <c>content/&lt;locale&gt;/</c>.</param>
-internal sealed record SectionEntry(string Id, string File);
+internal sealed record SectionEntry(string Id, SectionType Type, string File);

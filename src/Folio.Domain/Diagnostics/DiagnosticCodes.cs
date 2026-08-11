@@ -96,6 +96,24 @@ public static class DiagnosticCodes
     /// <summary>A section body carries a second H1 after its title.</summary>
     public const string SectionBodyH1 = "section.body_h1";
 
+    /// <summary>A declared section is on no page, so nothing renders it.</summary>
+    public const string SectionUnreferenced = "section.unreferenced";
+
+    /// <summary>A page slug is not a well-formed slug.</summary>
+    public const string PageSlugInvalid = "page.slug_invalid";
+
+    /// <summary>A page slug is declared more than once.</summary>
+    public const string PageDuplicateSlug = "page.duplicate_slug";
+
+    /// <summary>A page lists a section that is not declared.</summary>
+    public const string PageUnknownSection = "page.unknown_section";
+
+    /// <summary>No page is marked as the site's entry point.</summary>
+    public const string PageNoHome = "page.no_home";
+
+    /// <summary>More than one page is marked as the site's entry point.</summary>
+    public const string PageDuplicateHome = "page.duplicate_home";
+
     /// <summary>A section's markdown could not be parsed.</summary>
     public const string MarkdownUnparseable = "markdown.unparseable";
 

@@ -48,4 +48,11 @@ internal static class FolioApiErrors
     public static Error UnknownProject(string slug) => Errors.NotFound(
         "folio.project_unknown",
         $"No project with slug '{slug}'.");
+
+    /// <summary>Creates the failure for an unknown page slug.</summary>
+    /// <param name="slug">The slug asked for.</param>
+    /// <returns>An error mapping to 404.</returns>
+    public static Error UnknownPage(string slug) => Errors.NotFound(
+        "folio.page_unknown",
+        $"No page with slug '{slug}'.");
 }

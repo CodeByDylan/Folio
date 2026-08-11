@@ -18,18 +18,49 @@ public sealed class EndpointTests
     }
 
     [Test]
-    public async Task The_Site_Endpoint_Returns_Site_Facts_And_Section_Bodies()
+    public async Task The_Site_Endpoint_Returns_Site_Facts_And_Its_Pages_Without_Bodies()
     {
         using FolioApp app = new(FolioApp.WorkedExample());
         HttpClient client = await app.ReadyAsync();
 
         JsonElement site = await Json(client, "/v1/site?locale=nl");
+        JsonElement home = site.GetProperty("pages")[0];
 
         await Assert.That(site.GetProperty("locale").GetString()).IsEqualTo("nl");
         await Assert.That(site.GetProperty("url").GetString()).IsEqualTo("https://dutchy.dev/");
         await Assert.That(site.GetProperty("locales").EnumerateArray().Select(l => l.GetString()!))
             .IsEquivalentTo(["en", "nl"]);
-        await Assert.That(site.GetProperty("sections")[0].GetProperty("title").GetString()).IsEqualTo("Over mij");
+        await Assert.That(site.TryGetProperty("sections", out _)).IsFalse();
+        await Assert.That(home.GetProperty("slug").GetString()).IsEqualTo("home");
+        await Assert.That(home.GetProperty("home").GetBoolean()).IsTrue();
+        await Assert.That(home.GetProperty("navLabel").GetString()).IsEqualTo("Start");
+        await Assert.That(home.TryGetProperty("sections", out _)).IsFalse();
+    }
+
+    [Test]
+    public async Task A_Page_Carries_Its_Sections_With_Their_Type()
+    {
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
+        JsonElement about = page.GetProperty("sections")[0];
+
+        await Assert.That(page.GetProperty("slug").GetString()).IsEqualTo("home");
+        await Assert.That(about.GetProperty("id").GetString()).IsEqualTo("about");
+        await Assert.That(about.GetProperty("type").GetString()).IsEqualTo("prose");
+        await Assert.That(about.GetProperty("title").GetString()).IsEqualTo("Over mij");
+    }
+
+    [Test]
+    public async Task An_Unknown_Page_Answers_404()
+    {
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/v1/pages/nope", UriKind.Relative));
+
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
     }
 
     [Test]

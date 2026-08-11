@@ -83,6 +83,7 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
 
         return new ResolvedSection(
             "readme",
+            SectionType.Prose,
             new Localized<string>(rewritten.Title ?? "Readme", defaultLocale, fallback),
             new Localized<string>(rewritten.Body, defaultLocale, fallback),
             SectionSource.Readme);
@@ -149,6 +150,7 @@ internal sealed class SectionResolver(MarkdownRewriter rewriter)
 
             return new ResolvedSection(
                 section.Id,
+                section.Type,
                 new Localized<string>(rewritten.Title ?? Humanize(section.Id), locale, !atRequestedLocale),
                 new Localized<string>(rewritten.Body, locale, !atRequestedLocale),
                 SectionSource.Folio);

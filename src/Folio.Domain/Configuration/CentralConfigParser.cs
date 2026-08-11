@@ -18,13 +18,17 @@ internal sealed class CentralConfigParser
 
     private static readonly HashSet<string> LinkKeys = new(StringComparer.Ordinal) { "type", "url" };
 
-    private static readonly HashSet<string> SectionKeys = new(StringComparer.Ordinal) { "id", "file" };
+    private static readonly HashSet<string> SectionKeys = new(StringComparer.Ordinal) { "id", "type", "file" };
+
+    private static readonly HashSet<string> PageKeys = new(StringComparer.Ordinal)
+        { "slug", "home", "nav", "sections" };
 
     private static readonly HashSet<string> RootKeys = new(StringComparer.Ordinal) { "version" };
 
     private static readonly HashSet<string> SiteTables = new(StringComparer.Ordinal) { "site" };
 
-    private static readonly HashSet<string> SiteArrays = new(StringComparer.Ordinal) { "site.links", "site.sections" };
+    private static readonly HashSet<string> SiteArrays = new(StringComparer.Ordinal)
+        { "site.links", "site.sections", "site.pages" };
 
     private static readonly HashSet<string> ProjectsArrays = new(StringComparer.Ordinal) { "projects" };
 
@@ -171,13 +175,12 @@ internal sealed class CentralConfigParser
             links.Add(new SiteLinkEntry(type.Value, linkUrl));
         }
 
-        return new SiteConfig(
-            siteUrl,
-            fallback,
-            locales,
-            owner,
-            links,
-            ReadSections(document, "site.sections", file, SectionKeys));
+        IReadOnlyList<SectionEntry> sections = ReadSections(document, "site.sections", file, SectionKeys);
+        IReadOnlyList<PageEntry> pages = ReadPages(document, sections, file);
+
+        ReportUnreferencedSections(sections, pages, file);
+
+        return new SiteConfig(siteUrl, fallback, locales, owner, links, sections, pages);
     }
 
     private static IReadOnlyList<ProjectEntry>? ParseProjects(FileSet central, DiagnosticSink sink, SiteConfig? site)
@@ -279,6 +282,8 @@ internal sealed class CentralConfigParser
         DiagnosticSink sink,
         IReadOnlySet<string> known)
     {
+        // Only site sections are typed; a project's sections are prose by construction.
+        bool typed = known.Contains("type");
         List<SectionEntry> sections = [];
         HashSet<string> seen = new(StringComparer.Ordinal);
 
@@ -306,10 +311,118 @@ internal sealed class CentralConfigParser
                 continue;
             }
 
-            sections.Add(new SectionEntry(id, name));
+            SectionType type = SectionType.Prose;
+
+            if (typed && entry.Has("type"))
+            {
+                if (EnumNames.Section(entry, "type", sink) is not { } declared)
+                {
+                    continue;
+                }
+
+                type = declared;
+            }
+
+            sections.Add(new SectionEntry(id, type, name));
         }
 
         return sections;
+    }
+
+    /// <summary>Reads the declared pages, dropping any that cannot be rendered.</summary>
+    private static IReadOnlyList<PageEntry> ReadPages(
+        TomlDocumentReader document,
+        IReadOnlyList<SectionEntry> sections,
+        DiagnosticSink sink)
+    {
+        HashSet<string> declared = new(sections.Select(section => section.Id), StringComparer.Ordinal);
+        HashSet<Slug> seen = [];
+        List<PageEntry> pages = [];
+        PageEntry? home = null;
+
+        foreach (TomlTableReader entry in document.TableArray("site.pages"))
+        {
+            entry.ReportUnknownKeys(PageKeys, sink);
+            string? candidate = entry.String("slug", sink);
+
+            if (!Slug.TryParse(candidate, out Slug slug))
+            {
+                sink.Warning(
+                    DiagnosticCodes.PageSlugInvalid,
+                    $"'{candidate ?? "absent"}' is not a valid page slug: lowercase letters, digits and "
+                    + "hyphens only, not starting or ending with a hyphen. The page was dropped.",
+                    entry.PositionOf("slug"));
+                continue;
+            }
+
+            if (!seen.Add(slug))
+            {
+                sink.Warning(
+                    DiagnosticCodes.PageDuplicateSlug,
+                    $"Page slug '{slug}' is declared more than once; the later one was dropped.",
+                    entry.Position);
+                continue;
+            }
+
+            List<string> listed = [];
+
+            foreach (string id in entry.StringArray("sections", sink))
+            {
+                if (!declared.Contains(id))
+                {
+                    sink.Warning(
+                        DiagnosticCodes.PageUnknownSection,
+                        $"Page '{slug}' lists section '{id}', which is not declared; it was dropped.",
+                        entry.PositionOf("sections"));
+                    continue;
+                }
+
+                listed.Add(id);
+            }
+
+            bool isHome = entry.Boolean("home", sink) ?? false;
+
+            if (isHome && home is not null)
+            {
+                sink.Warning(
+                    DiagnosticCodes.PageDuplicateHome,
+                    $"Page '{slug}' is marked 'home', which page '{home.Slug}' already claims; "
+                    + "the later claim was ignored.",
+                    entry.PositionOf("home"));
+                isHome = false;
+            }
+
+            PageEntry page = new(slug, isHome, entry.Boolean("nav", sink) ?? true, listed);
+            home = isHome ? page : home;
+            pages.Add(page);
+        }
+
+        if (home is null)
+        {
+            sink.Warning(
+                DiagnosticCodes.PageNoHome,
+                pages.Count == 0
+                    ? "No page is declared, so the site has no entry point."
+                    : "No page is marked 'home', so the site has no entry point.");
+        }
+
+        return pages;
+    }
+
+    /// <summary>Reports any declared section that no page renders.</summary>
+    private static void ReportUnreferencedSections(
+        IReadOnlyList<SectionEntry> sections,
+        IReadOnlyList<PageEntry> pages,
+        DiagnosticSink sink)
+    {
+        HashSet<string> referenced = new(pages.SelectMany(page => page.Sections), StringComparer.Ordinal);
+
+        foreach (SectionEntry section in sections.Where(section => !referenced.Contains(section.Id)))
+        {
+            sink.Warning(
+                DiagnosticCodes.SectionUnreferenced,
+                $"Section '{section.Id}' is on no page, so nothing renders it.");
+        }
     }
 
     private static bool TryRead(

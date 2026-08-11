@@ -60,6 +60,9 @@ builder.Services
     .AddHandler<Folio.Api.Features.Site.GetSite.Handler,
         Folio.Api.Features.Site.GetSite.Request,
         Folio.Api.Features.Site.GetSite.Response>()
+    .AddHandler<Folio.Api.Features.Pages.GetPage.Handler,
+        Folio.Api.Features.Pages.GetPage.Request,
+        Folio.Api.Features.Pages.GetPage.Response>()
     .AddHandler<Folio.Api.Features.Projects.ListProjects.Handler,
         Folio.Api.Features.Projects.ListProjects.Request,
         Folio.Api.Features.Projects.ListProjects.Response>()

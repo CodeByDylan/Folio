@@ -8,3 +8,5 @@ tag.cli  = "Command-line tools"
 
 relation.uses    = "Gebruikt"
 relation."used-by" = "Gebruikt door"
+
+page.home = "Start"

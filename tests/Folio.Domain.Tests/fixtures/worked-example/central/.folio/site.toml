@@ -12,4 +12,10 @@ url  = "https://github.com/dutchy"
 
 [[site.sections]]
 id   = "about"
+type = "prose"
 file = "about.md"
+
+[[site.pages]]
+slug     = "home"
+home     = true
+sections = ["about"]
