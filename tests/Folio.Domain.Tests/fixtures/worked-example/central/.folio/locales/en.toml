@@ -10,3 +10,9 @@ relation.uses    = "Uses"
 relation."used-by" = "Used by"
 
 page.home = "Home"
+
+section.intro.headline        = "I build backend systems"
+section.intro.subheadline     = "C#, .NET and the tooling around them"
+section.intro.action.work     = "See my work"
+section.intro.action.github   = "GitHub"
+section.intro.media.image.alt = "A portrait of Dutchy"

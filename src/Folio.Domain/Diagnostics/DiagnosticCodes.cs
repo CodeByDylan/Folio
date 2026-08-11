@@ -99,6 +99,12 @@ public static class DiagnosticCodes
     /// <summary>A declared section is on no page, so nothing renders it.</summary>
     public const string SectionUnreferenced = "section.unreferenced";
 
+    /// <summary>A prose section declares no file, or a typed section declares one it cannot use.</summary>
+    public const string SectionFileUnexpected = "section.file_unexpected";
+
+    /// <summary>A typed section's <c>sections/&lt;id&gt;.toml</c> is missing or unparseable.</summary>
+    public const string SectionDataUnreadable = "section.data_unreadable";
+
     /// <summary>A page slug is not a well-formed slug.</summary>
     public const string PageSlugInvalid = "page.slug_invalid";
 

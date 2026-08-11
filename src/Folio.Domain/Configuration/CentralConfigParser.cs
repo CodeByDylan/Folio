@@ -175,7 +175,9 @@ internal sealed class CentralConfigParser
             links.Add(new SiteLinkEntry(type.Value, linkUrl));
         }
 
-        IReadOnlyList<SectionEntry> sections = ReadSections(document, "site.sections", file, SectionKeys);
+        IReadOnlyList<SectionEntry> sections = ReadSectionData(
+            ReadSections(document, "site.sections", file, SectionKeys), central, sink);
+
         IReadOnlyList<PageEntry> pages = ReadPages(document, sections, file);
 
         ReportUnreferencedSections(sections, pages, file);
@@ -293,11 +295,11 @@ internal sealed class CentralConfigParser
             string? id = entry.String("id", sink);
             string? name = entry.String("file", sink);
 
-            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(id))
             {
                 sink.Warning(
                     DiagnosticCodes.SchemaInvalidValue,
-                    "A section entry needs both 'id' and 'file'; it was dropped.",
+                    "A section entry needs an 'id'; it was dropped.",
                     entry.Position);
                 continue;
             }
@@ -323,10 +325,47 @@ internal sealed class CentralConfigParser
                 type = declared;
             }
 
+            // Prose is the only type whose content is a markdown file; the rest carry their own data.
+            if (type is SectionType.Prose == string.IsNullOrWhiteSpace(name))
+            {
+                sink.Warning(
+                    DiagnosticCodes.SectionFileUnexpected,
+                    type is SectionType.Prose
+                        ? $"Prose section '{id}' declares no 'file'; it was dropped."
+                        : $"Section '{id}' is '{type.ToString().ToLowerInvariant()}' and cannot use a 'file'; it was dropped.",
+                    entry.Position);
+                continue;
+            }
+
             sections.Add(new SectionEntry(id, type, name));
         }
 
         return sections;
+    }
+
+    /// <summary>Reads the data file each typed section carries, dropping any section that has none.</summary>
+    private static IReadOnlyList<SectionEntry> ReadSectionData(
+        IReadOnlyList<SectionEntry> sections,
+        FileSet central,
+        DiagnosticSink sink)
+    {
+        List<SectionEntry> read = [];
+
+        foreach (SectionEntry section in sections)
+        {
+            if (section.Type is SectionType.Prose)
+            {
+                read.Add(section);
+                continue;
+            }
+
+            if (HeroConfigParser.Read(central, ".folio", section.Id, sink) is { } hero)
+            {
+                read.Add(section with { Hero = hero });
+            }
+        }
+
+        return read;
     }
 
     /// <summary>Reads the declared pages, dropping any that cannot be rendered.</summary>

@@ -113,6 +113,9 @@ public enum SectionType
 {
     /// <summary>Authored markdown.</summary>
     Prose,
+
+    /// <summary>A headline, a subheadline, calls to action and an optional portrait.</summary>
+    Hero,
 }
 
 /// <summary>Where a section's body was authored.</summary>

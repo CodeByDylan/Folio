@@ -28,6 +28,58 @@
       },
       "sections": [
         {
+          "id": "intro",
+          "type": "Hero",
+          "title": null,
+          "body": null,
+          "source": "Folio",
+          "hero": {
+            "headline": {
+              "value": "I build backend systems",
+              "locale": "en",
+              "isFallback": false
+            },
+            "subheadline": {
+              "value": "C#, .NET and the tooling around them",
+              "locale": "en",
+              "isFallback": false
+            },
+            "actions": [
+              {
+                "id": "work",
+                "url": "/projects",
+                "label": {
+                  "value": "See my work",
+                  "locale": "en",
+                  "isFallback": false
+                }
+              },
+              {
+                "id": "github",
+                "url": "https://github.com/dutchy",
+                "label": {
+                  "value": "GitHub",
+                  "locale": "en",
+                  "isFallback": false
+                }
+              }
+            ],
+            "media": [
+              {
+                "role": "image",
+                "url": "https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/portrait.png",
+                "width": 1200,
+                "height": 1200,
+                "alt": {
+                  "value": "A portrait of Dutchy",
+                  "locale": "en",
+                  "isFallback": false
+                }
+              }
+            ]
+          }
+        },
+        {
           "id": "about",
           "type": "Prose",
           "title": {
@@ -40,7 +92,8 @@
             "locale": "en",
             "isFallback": false
           },
-          "source": "Folio"
+          "source": "Folio",
+          "hero": null
         }
       ]
     }
@@ -145,7 +198,8 @@
             "locale": "en",
             "isFallback": false
           },
-          "source": "Folio"
+          "source": "Folio",
+          "hero": null
         },
         {
           "id": "architecture",
@@ -160,7 +214,8 @@
             "locale": "en",
             "isFallback": false
           },
-          "source": "Folio"
+          "source": "Folio",
+          "hero": null
         }
       ],
       "languages": [
@@ -275,7 +330,8 @@
             "locale": "en",
             "isFallback": false
           },
-          "source": "Folio"
+          "source": "Folio",
+          "hero": null
         }
       ],
       "languages": [

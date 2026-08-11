@@ -10,3 +10,9 @@ relation.uses    = "Gebruikt"
 relation."used-by" = "Gebruikt door"
 
 page.home = "Start"
+
+section.intro.headline        = "Ik bouw backendsystemen"
+section.intro.subheadline     = "C#, .NET en het gereedschap eromheen"
+section.intro.action.work     = "Bekijk mijn werk"
+section.intro.action.github   = "GitHub"
+section.intro.media.image.alt = "Een portret van Dutchy"

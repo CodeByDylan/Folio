@@ -4,7 +4,14 @@ namespace Folio.Domain.Model;
 /// <param name="Repo">The repository holding it, as <c>owner/name</c>.</param>
 /// <param name="PinnedSha">The commit its files and media were read from.</param>
 /// <param name="Files">Its contents.</param>
-public sealed record CentralInput(string Repo, string PinnedSha, FileSet Files);
+/// <param name="MediaSizes">Intrinsic sizes by repo-relative path, for media that could be measured.</param>
+/// <param name="MediaPaths">The declared media paths that exist at the pinned commit.</param>
+public sealed record CentralInput(
+    string Repo,
+    string PinnedSha,
+    FileSet Files,
+    IReadOnlyDictionary<string, MediaSize> MediaSizes,
+    IReadOnlySet<string> MediaPaths);
 
 /// <summary>Everything the resolver needs about one listed project, assembled before resolution starts.</summary>
 /// <param name="Repo">The <c>owner/name</c> entry from <c>projects.toml</c>, already expanded.</param>

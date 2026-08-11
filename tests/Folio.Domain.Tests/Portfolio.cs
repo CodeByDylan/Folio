@@ -10,6 +10,7 @@ namespace Folio.Domain.Tests;
 internal sealed class Portfolio
 {
     private readonly Dictionary<string, string> _central = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, MediaSize> _centralSizes = new(StringComparer.Ordinal);
     private readonly List<(string Repo, Dictionary<string, string> Files, Dictionary<string, MediaSize> Sizes,
         RepoMetadata? Metadata, IReadOnlySet<string>? MediaPaths)> _repos = [];
 
@@ -92,7 +93,7 @@ internal sealed class Portfolio
     /// <returns>The snapshot, or the failure that prevented it.</returns>
     public Result<Snapshot> Resolve(string centralSha = "central-sha") =>
         new PortfolioResolver().Resolve(
-            new CentralInput("dutchy/portfolio", centralSha, Set(_central)),
+            Fixture.Central("dutchy/portfolio", centralSha, Set(_central), _centralSizes),
             [.. _repos.Select(repo =>
             {
                 RepoInput input = Fixture.Build(repo.Repo, Set(repo.Files), sizes: repo.Sizes) with

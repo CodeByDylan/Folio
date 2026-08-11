@@ -44,12 +44,31 @@ public sealed class EndpointTests
         HttpClient client = await app.ReadyAsync();
 
         JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
-        JsonElement about = page.GetProperty("sections")[0];
+        JsonElement about = page.GetProperty("sections")[1];
 
         await Assert.That(page.GetProperty("slug").GetString()).IsEqualTo("home");
         await Assert.That(about.GetProperty("id").GetString()).IsEqualTo("about");
         await Assert.That(about.GetProperty("type").GetString()).IsEqualTo("prose");
         await Assert.That(about.GetProperty("title").GetString()).IsEqualTo("Over mij");
+    }
+
+    [Test]
+    public async Task A_Hero_Section_Carries_Its_Own_Shape()
+    {
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
+        JsonElement intro = page.GetProperty("sections")[0];
+
+        await Assert.That(intro.GetProperty("type").GetString()).IsEqualTo("hero");
+        await Assert.That(intro.GetProperty("headline").GetString()).IsEqualTo("Ik bouw dingen");
+        await Assert.That(intro.TryGetProperty("body", out _)).IsFalse();
+
+        JsonElement action = intro.GetProperty("actions")[0];
+
+        await Assert.That(action.GetProperty("url").GetString()).IsEqualTo("/projects");
+        await Assert.That(action.GetProperty("label").GetString()).IsEqualTo("Bekijk mijn werk");
     }
 
     [Test]

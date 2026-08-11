@@ -158,6 +158,8 @@ public sealed class RedisSnapshotStoreTests
         "dutchy/portfolio",
         "central-sha",
         new FileSet([new(".folio/site.toml", Encoding.UTF8.GetBytes("version = 1\n"))]),
+        new Dictionary<string, MediaSize>(StringComparer.Ordinal),
+        new HashSet<string>(StringComparer.Ordinal),
         [
             new RepoInput(
                 "dutchy/folio",

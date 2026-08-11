@@ -96,6 +96,25 @@ public sealed class GoldenFileTests
         Title = Value(section.Title),
         Body = Value(section.Body),
         Source = section.Source.ToString(),
+        Hero = section.Hero is null ? null : new
+        {
+            Headline = Value(section.Hero.Headline),
+            Subheadline = Value(section.Hero.Subheadline),
+            Actions = section.Hero.Actions.Select(action => new
+            {
+                action.Id,
+                action.Url,
+                Label = Value(action.Label),
+            }),
+            Media = section.Hero.Media.Select(media => new
+            {
+                media.Role,
+                Url = media.Url.ToString(),
+                media.Width,
+                media.Height,
+                Alt = Value(media.Alt),
+            }),
+        },
     };
 
     private static object? Value(Localized<string>? localized) =>

@@ -138,6 +138,8 @@ the slug derived from its directory, since it has no `project.toml` to declare o
 | `section.empty` | warning | Empty section with a fallback title — not silently dropped |
 | `section.body_h1` | warning | A second H1 after the title; left as-is |
 | `section.unreferenced` | warning | A declared section on no page; nothing renders it |
+| `section.file_unexpected` | warning | Prose with no `file`, or a typed section declaring one; the section is dropped |
+| `section.data_unreadable` | warning | A typed section's `sections/<id>.toml` is missing or unparseable; the section is dropped |
 
 ### `page.*` — site composition
 

@@ -139,6 +139,22 @@ release serving a type a deployed client predates. **Validate the union lenientl
 rejects an unknown `type` loses the whole page, navigation included, rather than one section it could
 have skipped.
 
+| Type | Declared as | Carries |
+| --- | --- | --- |
+| `prose` | `file`, resolved under `content/<locale>/` | `title`, `body`, `source` |
+| `hero` | `sections/<id>.toml` | `headline`, `subheadline`, `actions`, `media` |
+
+The two shapes share only `id` and `type`; a hero has no `body`, and a prose section no `actions`.
+
+**A hero's action `url` is absolute as authored, and site-relative on the wire when it points at this
+site** — the same rewriting a markdown link gets. Folio still names no route: it reports the path the
+author wrote, not one it invented.
+
+A hero's strings live in `locales/<locale>.toml` under `section.<id>.headline`,
+`.subheadline`, `.action.<action-id>` and `.media.<role>.alt`, so the structure stays locale-invariant
+and only the words are translated. Its images are committed to the central repository and measured
+the way a project's are, so `width` and `height` are present whenever the header could be read.
+
 ## Section bodies
 
 A section body is **rewritten markdown**, never HTML and never an AST. Rewriting is applied as
