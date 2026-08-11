@@ -57,8 +57,8 @@ public sealed class WorkedExampleTests
         Snapshot snapshot = Resolve();
         ResolvedProject folio = Project(snapshot, Dutch, "folio");
 
-        ResolvedSection overview = folio.Sections.Single(s => s.Id == "overview");
-        ResolvedSection architecture = folio.Sections.Single(s => s.Id == "architecture");
+        ResolvedProseSection overview = folio.Sections.Single(s => s.Id == "overview");
+        ResolvedProseSection architecture = folio.Sections.Single(s => s.Id == "architecture");
 
         await Assert.That(overview.Title!.Value).IsEqualTo("Overzicht");
         await Assert.That(overview.Body!.IsFallback).IsFalse();
@@ -74,7 +74,7 @@ public sealed class WorkedExampleTests
     [Test]
     public async Task Titles_Are_Taken_From_The_H1_And_Removed_From_The_Body()
     {
-        ResolvedSection overview = Project(Resolve(), English, "folio").Sections.First();
+        ResolvedProseSection overview = Project(Resolve(), English, "folio").Sections.First();
 
         await Assert.That(overview.Title!.Value).IsEqualTo("Overview");
         await Assert.That(overview.Body!.Value).DoesNotContain("# Overview");
@@ -84,7 +84,7 @@ public sealed class WorkedExampleTests
     [Test]
     public async Task Images_Become_Pinned_Raw_Urls_And_Sibling_Links_Become_Anchors()
     {
-        ResolvedSection overview = Project(Resolve(), English, "folio").Sections.First();
+        ResolvedProseSection overview = Project(Resolve(), English, "folio").Sections.First();
 
         await Assert.That(overview.Body!.Value)
             .Contains("https://raw.githubusercontent.com/dutchy/folio/abc123/.folio/media/hero.png");
@@ -94,7 +94,7 @@ public sealed class WorkedExampleTests
     [Test]
     public async Task Links_Back_To_The_Site_Become_Root_Relative()
     {
-        ResolvedSection overview = Project(Resolve(), English, "folio").Sections.First();
+        ResolvedProseSection overview = Project(Resolve(), English, "folio").Sections.First();
 
         await Assert.That(overview.Body!.Value).Contains("[folio-core](/projects/folio-core)");
     }
@@ -161,7 +161,7 @@ public sealed class WorkedExampleTests
     {
         Snapshot snapshot = Resolve();
 
-        ResolvedSection about = snapshot.Localizations[Dutch].Pages.Single().Sections.Single(section => section.Id == "about");
+        ResolvedProseSection about = Section<ResolvedProseSection>(snapshot, Dutch, "about");
 
         await Assert.That(about.Id).IsEqualTo("about");
         await Assert.That(about.Title!.Value).IsEqualTo("Over mij");
@@ -171,7 +171,7 @@ public sealed class WorkedExampleTests
     [Test]
     public async Task Central_Section_Images_Are_Pinned_To_The_Central_Repository()
     {
-        ResolvedSection about = Resolve().Localizations[English].Pages.Single().Sections.Single(section => section.Id == "about");
+        ResolvedProseSection about = Section<ResolvedProseSection>(Resolve(), English, "about");
 
         await Assert.That(about.Body!.Value)
             .Contains("https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/me.png");
@@ -180,13 +180,9 @@ public sealed class WorkedExampleTests
     [Test]
     public async Task A_Hero_Carries_Its_Strings_Actions_And_Portrait()
     {
-        ResolvedSection intro = Resolve().Localizations[Dutch].Pages.Single()
-            .Sections.Single(section => section.Id == "intro");
+        ResolvedHeroSection hero = Section<ResolvedHeroSection>(Resolve(), Dutch, "intro");
 
-        ResolvedHero hero = intro.Hero!;
-
-        await Assert.That(intro.Type).IsEqualTo(SectionType.Hero);
-        await Assert.That(intro.Body).IsNull();
+        await Assert.That(hero.Type).IsEqualTo(SectionType.Hero);
         await Assert.That(hero.Headline!.Value).IsEqualTo("Ik bouw backendsystemen");
 
         // Declared as an absolute URL under site.url, so it is served as a path.
@@ -198,6 +194,60 @@ public sealed class WorkedExampleTests
             .IsEqualTo("https://raw.githubusercontent.com/dutchy/portfolio/centralsha/.folio/media/portrait.png");
         await Assert.That(hero.Media.Single().Width).IsEqualTo(1200);
         await Assert.That(hero.Media.Single().Alt!.Value).IsEqualTo("Een portret van Dutchy");
+    }
+
+    [Test]
+    public async Task Skills_Keep_Their_Categories_And_Declaration_Order()
+    {
+        IReadOnlyList<ResolvedSkillCategory> categories =
+            Section<ResolvedSkillsSection>(Resolve(), Dutch, "stack").Categories;
+
+        await Assert.That(categories.Select(category => category.Id))
+            .IsEquivalentTo(["languages", "tools"], CollectionOrdering.Matching);
+        await Assert.That(categories[0].Label!.Value).IsEqualTo("Talen");
+
+        // The sub-table array is indexed by path alone, so nesting is rebuilt from source order.
+        await Assert.That(categories[0].Skills.Select(skill => skill.Id))
+            .IsEquivalentTo(["rust", "csharp"], CollectionOrdering.Matching);
+        await Assert.That(categories[1].Skills.Select(skill => skill.Id)).IsEquivalentTo(["docker"]);
+
+        await Assert.That(categories[0].Skills[0].Level).IsEqualTo(SkillLevel.Expert);
+        await Assert.That(categories[0].Skills[1].Level).IsEqualTo(SkillLevel.Proficient);
+        await Assert.That(categories[1].Skills[0].Level).IsEqualTo(SkillLevel.Familiar);
+    }
+
+    [Test]
+    public async Task Answers_Are_Split_On_Their_Headings_And_Rewritten()
+    {
+        IReadOnlyList<ResolvedQuestion> questions =
+            Section<ResolvedQaSection>(Resolve(), English, "faq").Questions;
+
+        await Assert.That(questions.Select(question => question.Id))
+            .IsEquivalentTo(["why", "cost"], CollectionOrdering.Matching);
+        await Assert.That(questions[0].Question!.Value).IsEqualTo("Why does this exist?");
+
+        // The heading that opens an answer is stripped; deeper ones stay in the body.
+        await Assert.That(questions[0].Answer!.Value).DoesNotContain("## why");
+        await Assert.That(questions[0].Answer!.Value).Contains("### In practice");
+        await Assert.That(questions[1].Answer!.Value).Contains("[folio-core](/projects/folio-core)");
+    }
+
+    [Test]
+    public async Task A_Missing_Answer_And_A_Stray_Heading_Are_Both_Reported()
+    {
+        Snapshot snapshot = Resolve();
+
+        ResolvedQaSection faq = Section<ResolvedQaSection>(snapshot, Dutch, "faq");
+
+        // Dutch answers 'why' but not 'cost', and carries a heading nothing declares.
+        await Assert.That(faq.Questions[0].Answer!.Value).Contains("Omdat een portfolio");
+        await Assert.That(faq.Questions[1].Answer).IsNull();
+        await Assert.That(faq.Questions[1].Question!.Value).IsEqualTo("Wat kost het?");
+
+        await Assert.That(snapshot.Diagnostics.Select(d => d.Code))
+            .Contains(DiagnosticCodes.QaEntryMissing);
+        await Assert.That(snapshot.Diagnostics.Select(d => d.Code))
+            .Contains(DiagnosticCodes.QaEntryUnknown);
     }
 
     [Test]
@@ -283,6 +333,14 @@ public sealed class WorkedExampleTests
             ? result.Value
             : throw new InvalidOperationException(result.Error.Message);
     }
+
+    /// <summary>Finds a site section by id, asserting its case by the type asked for.</summary>
+    private static T Section<T>(Snapshot snapshot, LocaleTag locale, string id)
+        where T : ResolvedSection =>
+        snapshot.Localizations[locale].Pages
+            .SelectMany(page => page.Sections)
+            .OfType<T>()
+            .Single(section => section.Id == id);
 
     private static ResolvedProject Project(Snapshot snapshot, LocaleTag locale, string slug) =>
         snapshot.Localizations[locale].Projects.Single(project => project.Slug.Value == slug);

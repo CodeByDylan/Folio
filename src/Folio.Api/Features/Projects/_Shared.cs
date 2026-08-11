@@ -189,7 +189,7 @@ internal static class ProjectMapping
     /// <param name="scope">Where fallbacks are recorded.</param>
     /// <returns>The wire shapes.</returns>
     public static IReadOnlyList<SectionView> Sections(
-        IReadOnlyList<ResolvedSection> sections,
+        IReadOnlyList<ResolvedProseSection> sections,
         ProvenanceScope scope) =>
     [
         .. sections.Select((section, index) => new SectionView(

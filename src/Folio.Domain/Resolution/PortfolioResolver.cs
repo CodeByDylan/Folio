@@ -136,7 +136,7 @@ public sealed class PortfolioResolver
         foreach (LocaleTag locale in config.Site.Locales)
         {
             localizations[locale] = ResolveSite(
-                locale, central, config, centralStrings, sectionResolver, projectResolver,
+                locale, central, config, centralStrings, rewriter, sectionResolver, projectResolver,
                 parsed, graph, projectSinks, sink);
         }
 
@@ -218,6 +218,7 @@ public sealed class PortfolioResolver
         CentralInput central,
         CentralConfig config,
         LocaleResolver centralStrings,
+        MarkdownRewriter rewriter,
         SectionResolver sectionResolver,
         ProjectResolver projectResolver,
         IReadOnlyList<ParsedProject> parsed,
@@ -227,7 +228,7 @@ public sealed class PortfolioResolver
     {
         IReadOnlyList<LocaleTag> chain = [.. centralStrings.Chain(locale)];
 
-        IReadOnlyList<ResolvedSection> siteSections = sectionResolver.Resolve(
+        IReadOnlyList<ResolvedProseSection> siteSections = sectionResolver.Resolve(
             config.Site.Sections,
             central.Files,
             ".folio",
@@ -242,11 +243,40 @@ public sealed class PortfolioResolver
 
         // A section missing in every locale is dropped by the resolver, so a page may list one that is gone.
         Dictionary<string, ResolvedSection> byId = siteSections.ToDictionary(
-            section => section.Id, StringComparer.Ordinal);
+            section => section.Id, section => (ResolvedSection)section, StringComparer.Ordinal);
 
         foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Hero is not null))
         {
             byId[entry.Id] = ResolveHero(entry, central, config, centralStrings, locale, sink);
+        }
+
+        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Skills is not null))
+        {
+            byId[entry.Id] = ResolveSkills(entry, centralStrings, locale, sink);
+        }
+
+        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Projects is not null))
+        {
+            byId[entry.Id] = new ResolvedProjectsSection(
+                entry.Id,
+                centralStrings.Resolve($"section.{entry.Id}.heading", locale, sink, "/heading"),
+                entry.Projects!.Featured,
+                entry.Projects.Limit);
+        }
+
+        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Type is SectionType.Contact))
+        {
+            string prefix = $"section.{entry.Id}";
+
+            byId[entry.Id] = new ResolvedContactSection(
+                entry.Id,
+                centralStrings.Resolve($"{prefix}.heading", locale, sink, "/heading"),
+                centralStrings.Resolve($"{prefix}.blurb", locale, sink, "/blurb"));
+        }
+
+        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Questions is not null))
+        {
+            byId[entry.Id] = ResolveQa(entry, central, rewriter, centralStrings, chain, locale, sink);
         }
 
         return new ResolvedSite(
@@ -331,17 +361,126 @@ public sealed class PortfolioResolver
                 strings.Resolve($"{prefix}.media.{role}.alt", locale, sink, $"/media/{media.Count}/alt")));
         }
 
-        return new ResolvedSection(
+        return new ResolvedHeroSection(
             entry.Id,
-            entry.Type,
-            null,
-            null,
-            SectionSource.Folio,
-            new ResolvedHero(
-                strings.Resolve($"{prefix}.headline", locale, sink, "/headline"),
-                strings.Resolve($"{prefix}.subheadline", locale, sink, "/subheadline"),
-                actions,
-                media));
+            strings.Resolve($"{prefix}.headline", locale, sink, "/headline"),
+            strings.Resolve($"{prefix}.subheadline", locale, sink, "/subheadline"),
+            actions,
+            media);
+    }
+
+    private static ResolvedSection ResolveSkills(
+        SectionEntry entry,
+        LocaleResolver strings,
+        LocaleTag locale,
+        DiagnosticSink sink)
+    {
+        string prefix = $"section.{entry.Id}";
+        List<ResolvedSkillCategory> categories = [];
+
+        foreach (SkillCategoryEntry category in entry.Skills!.Categories)
+        {
+            int index = categories.Count;
+
+            categories.Add(new ResolvedSkillCategory(
+                category.Id,
+                strings.Resolve(
+                    $"{prefix}.category.{category.Id}",
+                    locale,
+                    sink,
+                    $"/categories/{index}/label"),
+                [
+                    .. category.Skills.Select((skill, position) => new ResolvedSkill(
+                        skill.Id,
+                        skill.Level,
+                        strings.Resolve(
+                            $"{prefix}.skill.{skill.Id}",
+                            locale,
+                            sink,
+                            $"/categories/{index}/skills/{position}/label"))),
+                ]));
+        }
+
+        return new ResolvedSkillsSection(entry.Id, categories);
+    }
+
+    private static ResolvedSection ResolveQa(
+        SectionEntry entry,
+        CentralInput central,
+        MarkdownRewriter rewriter,
+        LocaleResolver strings,
+        IReadOnlyList<LocaleTag> chain,
+        LocaleTag requested,
+        DiagnosticSink sink)
+    {
+        string prefix = $"section.{entry.Id}";
+        IReadOnlyList<string> declared = entry.Questions!;
+        List<ResolvedQuestion> questions = [];
+
+        // Answers follow the same fallback chain a prose body does.
+        (IReadOnlyList<Answer> answers, LocaleTag found, string path) = Answers(entry, central, chain);
+        Dictionary<string, Answer> byId = new(StringComparer.Ordinal);
+        DiagnosticSink file = sink.ForFile(path);
+
+        foreach (Answer answer in answers)
+        {
+            if (!declared.Contains(answer.Id, StringComparer.Ordinal))
+            {
+                file.Warning(
+                    DiagnosticCodes.QaEntryUnknown,
+                    $"'{answer.Id}' answers no declared entry on '{entry.Id}'; it was ignored.");
+                continue;
+            }
+
+            byId[answer.Id] = answer;
+        }
+
+        bool fallback = !found.Equals(requested);
+
+        foreach (string id in declared)
+        {
+            int index = questions.Count;
+
+            if (!byId.TryGetValue(id, out Answer? answer))
+            {
+                file.Warning(
+                    DiagnosticCodes.QaEntryMissing,
+                    $"Entry '{id}' on '{entry.Id}' has no '## {id}' heading; it has no answer.");
+            }
+
+            MarkdownContext context = new(
+                path, central.Repo, central.PinnedSha, new Dictionary<string, string>(StringComparer.Ordinal));
+
+            RewrittenMarkdown? rewritten = answer is null
+                ? null
+                : rewriter.Rewrite(answer.Body, context, file);
+
+            questions.Add(new ResolvedQuestion(
+                id,
+                strings.Resolve($"{prefix}.question.{id}", requested, sink, $"/questions/{index}/question"),
+                rewritten is null ? null : new Localized<string>(rewritten.Body, found, fallback)));
+        }
+
+        return new ResolvedQaSection(entry.Id, questions);
+    }
+
+    /// <summary>Finds the first answers file in the chain and splits it.</summary>
+    private static (IReadOnlyList<Answer> Answers, LocaleTag Locale, string Path) Answers(
+        SectionEntry entry,
+        CentralInput central,
+        IReadOnlyList<LocaleTag> chain)
+    {
+        foreach (LocaleTag locale in chain)
+        {
+            string path = $".folio/content/{locale.Value}/{entry.Id}.md";
+
+            if (central.Files.TryGet(path, out ReadOnlyMemory<byte> contents))
+            {
+                return (AnswerSplitter.Split(Encoding.UTF8.GetString(contents.Span), out _), locale, path);
+            }
+        }
+
+        return ([], chain[^1], $".folio/content/{chain[0].Value}/{entry.Id}.md");
     }
 
     /// <summary>Resolves every declared interface string for one locale.</summary>
@@ -563,6 +702,38 @@ public sealed class PortfolioResolver
             foreach (string role in section.Hero.Media.Keys)
             {
                 _ = central.Add($"{prefix}.media.{role}.alt");
+            }
+        }
+
+        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Projects is not null))
+        {
+            _ = central.Add($"section.{section.Id}.heading");
+        }
+
+        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Type is SectionType.Contact))
+        {
+            _ = central.Add($"section.{section.Id}.heading");
+            _ = central.Add($"section.{section.Id}.blurb");
+        }
+
+        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Questions is not null))
+        {
+            foreach (string id in section.Questions!)
+            {
+                _ = central.Add($"section.{section.Id}.question.{id}");
+            }
+        }
+
+        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Skills is not null))
+        {
+            foreach (SkillCategoryEntry category in section.Skills!.Categories)
+            {
+                _ = central.Add($"section.{section.Id}.category.{category.Id}");
+
+                foreach (SkillEntry skill in category.Skills)
+                {
+                    _ = central.Add($"section.{section.Id}.skill.{skill.Id}");
+                }
             }
         }
 

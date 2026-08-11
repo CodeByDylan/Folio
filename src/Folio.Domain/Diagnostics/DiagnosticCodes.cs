@@ -105,6 +105,12 @@ public static class DiagnosticCodes
     /// <summary>A typed section's <c>sections/&lt;id&gt;.toml</c> is missing or unparseable.</summary>
     public const string SectionDataUnreadable = "section.data_unreadable";
 
+    /// <summary>A declared question has no heading in one locale's answers file.</summary>
+    public const string QaEntryMissing = "qa.entry_missing";
+
+    /// <summary>An answers file holds content that no declared question claims.</summary>
+    public const string QaEntryUnknown = "qa.entry_unknown";
+
     /// <summary>A page slug is not a well-formed slug.</summary>
     public const string PageSlugInvalid = "page.slug_invalid";
 

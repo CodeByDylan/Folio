@@ -58,7 +58,36 @@ internal sealed record SiteLinkEntry(SiteLinkType Type, Uri Url);
 /// <param name="Type">What the section holds. Project sections are always prose.</param>
 /// <param name="File">The locale-agnostic file name under <c>content/&lt;locale&gt;/</c>, for prose only.</param>
 /// <param name="Hero">The data read from <c>sections/&lt;id&gt;.toml</c>, for a hero only.</param>
-internal sealed record SectionEntry(string Id, SectionType Type, string? File, HeroConfig? Hero = null);
+/// <param name="Skills">The data read from <c>sections/&lt;id&gt;.toml</c>, for a skills section only.</param>
+/// <param name="Questions">The entry ids read from <c>sections/&lt;id&gt;.toml</c>, for a Q&amp;A only.</param>
+/// <param name="Projects">The selection read from <c>sections/&lt;id&gt;.toml</c>, for a projects section only.</param>
+internal sealed record SectionEntry(
+    string Id,
+    SectionType Type,
+    string? File,
+    HeroConfig? Hero = null,
+    SkillsConfig? Skills = null,
+    IReadOnlyList<string>? Questions = null,
+    ProjectsConfig? Projects = null);
+
+/// <summary><c>sections/&lt;id&gt;.toml</c> for a projects section, parsed.</summary>
+/// <param name="Featured">Whether to show only the projects the site highlights.</param>
+/// <param name="Limit">How many to show at most, or <see langword="null" /> for all of them.</param>
+internal sealed record ProjectsConfig(bool Featured, int? Limit);
+
+/// <summary><c>sections/&lt;id&gt;.toml</c> for a skills section, parsed.</summary>
+/// <param name="Categories">The categories, in declaration order.</param>
+internal sealed record SkillsConfig(IReadOnlyList<SkillCategoryEntry> Categories);
+
+/// <summary>One category of skills.</summary>
+/// <param name="Id">Stable within the section; the suffix of its label key.</param>
+/// <param name="Skills">The skills it holds, in declaration order.</param>
+internal sealed record SkillCategoryEntry(string Id, IReadOnlyList<SkillEntry> Skills);
+
+/// <summary>One rated skill.</summary>
+/// <param name="Id">Stable within the section; the suffix of its label key.</param>
+/// <param name="Level">How well it is known.</param>
+internal sealed record SkillEntry(string Id, SkillLevel Level);
 
 /// <summary><c>sections/&lt;id&gt;.toml</c> for a hero section, parsed.</summary>
 /// <param name="Actions">Calls to action, in declaration order.</param>

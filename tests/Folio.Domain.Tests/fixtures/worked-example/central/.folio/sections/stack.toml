@@ -1,0 +1,19 @@
+version = 1
+
+[[categories]]
+id = "languages"
+
+[[categories.skills]]
+id    = "rust"
+level = "expert"
+
+[[categories.skills]]
+id    = "csharp"
+level = "proficient"
+
+[[categories]]
+id = "tools"
+
+[[categories.skills]]
+id    = "docker"
+level = "familiar"

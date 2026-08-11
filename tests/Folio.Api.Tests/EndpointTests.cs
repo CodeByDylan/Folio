@@ -44,7 +44,7 @@ public sealed class EndpointTests
         HttpClient client = await app.ReadyAsync();
 
         JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
-        JsonElement about = page.GetProperty("sections")[1];
+        JsonElement about = page.GetProperty("sections")[5];
 
         await Assert.That(page.GetProperty("slug").GetString()).IsEqualTo("home");
         await Assert.That(about.GetProperty("id").GetString()).IsEqualTo("about");
@@ -69,6 +69,72 @@ public sealed class EndpointTests
 
         await Assert.That(action.GetProperty("url").GetString()).IsEqualTo("/projects");
         await Assert.That(action.GetProperty("label").GetString()).IsEqualTo("Bekijk mijn werk");
+    }
+
+    [Test]
+    public async Task A_Skills_Section_Carries_Its_Categories_And_Levels()
+    {
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
+        JsonElement stack = page.GetProperty("sections")[1];
+        JsonElement category = stack.GetProperty("categories")[0];
+
+        await Assert.That(stack.GetProperty("type").GetString()).IsEqualTo("skills");
+        await Assert.That(category.GetProperty("id").GetString()).IsEqualTo("languages");
+        await Assert.That(category.GetProperty("label").GetString()).IsEqualTo("Talen");
+        await Assert.That(category.GetProperty("skills")[0].GetProperty("level").GetString())
+            .IsEqualTo("expert");
+    }
+
+    [Test]
+    public async Task A_Qa_Section_Carries_Its_Questions_And_Answers()
+    {
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
+        JsonElement faq = page.GetProperty("sections")[2];
+        JsonElement entry = faq.GetProperty("questions")[0];
+
+        await Assert.That(faq.GetProperty("type").GetString()).IsEqualTo("qa");
+        await Assert.That(entry.GetProperty("id").GetString()).IsEqualTo("why");
+        await Assert.That(entry.GetProperty("question").GetString()).IsEqualTo("Why?");
+        await Assert.That(entry.GetProperty("answer").GetString()).IsEqualTo("Omdat het moet.");
+    }
+
+    [Test]
+    public async Task A_Contact_Section_Carries_Only_Its_Words()
+    {
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
+        JsonElement reach = page.GetProperty("sections")[3];
+
+        await Assert.That(reach.GetProperty("type").GetString()).IsEqualTo("contact");
+        await Assert.That(reach.GetProperty("heading").GetString()).IsEqualTo("Get in touch");
+
+        // The form is the frontend's; Folio takes no submissions and describes no fields.
+        await Assert.That(reach.TryGetProperty("fields", out _)).IsFalse();
+    }
+
+    [Test]
+    public async Task A_Projects_Section_Carries_A_Selection_Not_The_Projects()
+    {
+        using FolioApp app = new(FolioApp.WorkedExample());
+        HttpClient client = await app.ReadyAsync();
+
+        JsonElement page = await Json(client, "/v1/pages/home?locale=nl");
+        JsonElement work = page.GetProperty("sections")[4];
+
+        await Assert.That(work.GetProperty("type").GetString()).IsEqualTo("projects");
+        await Assert.That(work.GetProperty("featured").GetBoolean()).IsTrue();
+        await Assert.That(work.GetProperty("limit").GetInt32()).IsEqualTo(3);
+
+        // The frontend already holds the index, so the page never repeats it.
+        await Assert.That(work.TryGetProperty("projects", out _)).IsFalse();
     }
 
     [Test]

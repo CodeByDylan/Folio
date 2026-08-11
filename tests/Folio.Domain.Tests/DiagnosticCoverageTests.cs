@@ -242,6 +242,10 @@ public sealed class DiagnosticCoverageTests
             type = "hero"
             """),
 
+        [DiagnosticCodes.QaEntryMissing] = () => Qa(null),
+
+        [DiagnosticCodes.QaEntryUnknown] = () => Qa("## why\n\nBecause.\n\n## stray\n\nNothing declares this.\n"),
+
         [DiagnosticCodes.PageSlugInvalid] = () => Site("""
             [[site.pages]]
             slug = "Not A Slug"
@@ -280,6 +284,29 @@ public sealed class DiagnosticCoverageTests
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
     /// <summary>Resolves a portfolio whose <c>site.toml</c> carries one extra block.</summary>
+    private static IReadOnlyList<Diagnostic> Qa(string? answers) => Portfolio.Valid()
+        .Central(".folio/site.toml", $"""
+            version = 1
+
+            [site]
+            url            = "https://dutchy.dev"
+            default_locale = "en"
+            locales        = ["en"]
+            owner          = "dutchy"
+
+            [[site.sections]]
+            id   = "faq"
+            type = "qa"
+
+            [[site.pages]]
+            slug     = "home"
+            home     = true
+            sections = ["faq"]
+            """)
+        .Central(".folio/sections/faq.toml", "version = 1\n\n[[entries]]\nid = \"why\"\n")
+        .Central(".folio/content/en/faq.md", answers)
+        .Diagnostics();
+
     private static IReadOnlyList<Diagnostic> Site(string extra) => Portfolio.Valid()
         .Central(".folio/site.toml", $"""
             version = 1
