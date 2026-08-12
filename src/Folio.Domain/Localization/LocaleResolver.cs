@@ -8,6 +8,9 @@ internal sealed class LocaleResolver(
     IReadOnlyDictionary<LocaleTag, LocaleBundle> bundles,
     LocaleTag defaultLocale)
 {
+    /// <summary>The prefix marking a key as an interface string rather than content.</summary>
+    public const string UiPrefix = "ui.";
+
     /// <summary>Gets the chain a locale falls back through, most specific first.</summary>
     /// <param name="requested">The locale being resolved.</param>
     /// <returns>The requested locale, its truncations, then the default locale.</returns>

@@ -53,31 +53,57 @@ internal sealed record TagDefinition(string Id, TagKind? Kind);
 /// <param name="Url">The link target.</param>
 internal sealed record SiteLinkEntry(SiteLinkType Type, Uri Url);
 
-/// <summary>One declared section, shared by site and project configs.</summary>
+/// <summary>A section as the site file declares it, before its data is read.</summary>
 /// <param name="Id">Stable within its owner.</param>
-/// <param name="Type">What the section holds. Project sections are always prose.</param>
-/// <param name="File">The locale-agnostic file name under <c>content/&lt;locale&gt;/</c>, for prose only.</param>
-/// <param name="Hero">The data read from <c>sections/&lt;id&gt;.toml</c>, for a hero only.</param>
-/// <param name="Skills">The data read from <c>sections/&lt;id&gt;.toml</c>, for a skills section only.</param>
-/// <param name="Questions">The entry ids read from <c>sections/&lt;id&gt;.toml</c>, for a Q&amp;A only.</param>
-/// <param name="Projects">The selection read from <c>sections/&lt;id&gt;.toml</c>, for a projects section only.</param>
-internal sealed record SectionEntry(
-    string Id,
-    SectionType Type,
-    string? File,
-    HeroConfig? Hero = null,
-    SkillsConfig? Skills = null,
-    IReadOnlyList<string>? Questions = null,
-    ProjectsConfig? Projects = null);
+/// <param name="Type">What the section holds.</param>
+/// <param name="File">The markdown file name, for prose only.</param>
+internal sealed record SectionDeclaration(string Id, SectionType Type, string? File);
 
-/// <summary><c>sections/&lt;id&gt;.toml</c> for a projects section, parsed.</summary>
+/// <summary>One declared section with its data. Each type is one case.</summary>
+/// <param name="Id">Stable within its owner.</param>
+/// <param name="Type">What the section holds.</param>
+internal abstract record SectionEntry(string Id, SectionType Type);
+
+/// <summary>Prose, which reads a markdown file per locale.</summary>
+/// <param name="Id">Stable within its owner.</param>
+/// <param name="File">The locale-agnostic file name under <c>content/&lt;locale&gt;/</c>.</param>
+internal sealed record ProseSectionEntry(string Id, string File) : SectionEntry(Id, SectionType.Prose);
+
+/// <summary>A hero, read from <c>sections/&lt;id&gt;.toml</c>.</summary>
+/// <param name="Id">Stable within the site.</param>
+/// <param name="Actions">Calls to action, in declaration order.</param>
+/// <param name="Media">Image references keyed by role, such as <c>image</c>.</param>
+internal sealed record HeroSectionEntry(
+    string Id,
+    IReadOnlyList<HeroActionEntry> Actions,
+    IReadOnlyDictionary<string, string> Media) : SectionEntry(Id, SectionType.Hero);
+
+/// <summary>Skills, read from <c>sections/&lt;id&gt;.toml</c>.</summary>
+/// <param name="Id">Stable within the site.</param>
+/// <param name="Categories">The categories, in declaration order.</param>
+internal sealed record SkillsSectionEntry(
+    string Id,
+    IReadOnlyList<SkillCategoryEntry> Categories) : SectionEntry(Id, SectionType.Skills);
+
+/// <summary>A Q&amp;A, read from <c>sections/&lt;id&gt;.toml</c>.</summary>
+/// <param name="Id">Stable within the site.</param>
+/// <param name="Entries">The entry ids, in declaration order.</param>
+internal sealed record QaSectionEntry(
+    string Id,
+    IReadOnlyList<string> Entries) : SectionEntry(Id, SectionType.Qa);
+
+/// <summary>An invitation to get in touch, which declares nothing.</summary>
+/// <param name="Id">Stable within the site.</param>
+internal sealed record ContactSectionEntry(string Id) : SectionEntry(Id, SectionType.Contact);
+
+/// <summary>A selection of the portfolio, read from <c>sections/&lt;id&gt;.toml</c>.</summary>
+/// <param name="Id">Stable within the site.</param>
 /// <param name="Featured">Whether to show only the projects the site highlights.</param>
 /// <param name="Limit">How many to show at most, or <see langword="null" /> for all of them.</param>
-internal sealed record ProjectsConfig(bool Featured, int? Limit);
-
-/// <summary><c>sections/&lt;id&gt;.toml</c> for a skills section, parsed.</summary>
-/// <param name="Categories">The categories, in declaration order.</param>
-internal sealed record SkillsConfig(IReadOnlyList<SkillCategoryEntry> Categories);
+internal sealed record ProjectsSectionEntry(
+    string Id,
+    bool Featured,
+    int? Limit) : SectionEntry(Id, SectionType.Projects);
 
 /// <summary>One category of skills.</summary>
 /// <param name="Id">Stable within the section; the suffix of its label key.</param>
@@ -88,13 +114,6 @@ internal sealed record SkillCategoryEntry(string Id, IReadOnlyList<SkillEntry> S
 /// <param name="Id">Stable within the section; the suffix of its label key.</param>
 /// <param name="Level">How well it is known.</param>
 internal sealed record SkillEntry(string Id, SkillLevel Level);
-
-/// <summary><c>sections/&lt;id&gt;.toml</c> for a hero section, parsed.</summary>
-/// <param name="Actions">Calls to action, in declaration order.</param>
-/// <param name="Media">Image references keyed by role, such as <c>image</c>.</param>
-internal sealed record HeroConfig(
-    IReadOnlyList<HeroActionEntry> Actions,
-    IReadOnlyDictionary<string, string> Media);
 
 /// <summary>One call to action on a hero.</summary>
 /// <param name="Id">Stable within the section; the suffix of its label key.</param>

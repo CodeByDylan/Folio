@@ -7,42 +7,23 @@ namespace Folio.Domain.Configuration;
 /// <summary>Parses <c>sections/&lt;id&gt;.toml</c> for a projects section.</summary>
 internal static class ProjectsConfigParser
 {
-    private static readonly HashSet<string> RootKeys =
-        new(StringComparer.Ordinal) { "version", "featured", "limit" };
-
-    private static readonly HashSet<string> None = new(StringComparer.Ordinal);
+    private static readonly HashSet<string> Keys = new(StringComparer.Ordinal) { "featured", "limit" };
 
     /// <summary>Reads one projects section's selection.</summary>
     /// <param name="files">The central file set.</param>
     /// <param name="folioRoot">The path of the <c>.folio</c> directory.</param>
     /// <param name="id">The section id.</param>
     /// <param name="sink">Where problems are reported.</param>
-    /// <returns>The selection, or <see langword="null" /> if the file is missing or unparseable.</returns>
-    public static ProjectsConfig? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
+    /// <returns>The projects section, or <see langword="null" /> if the file is missing or unparseable.</returns>
+    public static ProjectsSectionEntry? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
     {
-        string path = HeroConfigParser.PathFor(folioRoot, id);
-        DiagnosticSink file = sink.ForFile(path);
-
-        if (!files.TryGet(path, out ReadOnlyMemory<byte> contents))
-        {
-            file.Warning(
-                DiagnosticCodes.SectionDataUnreadable,
-                $"Section '{id}' declares no '{path}'; it was dropped.");
-            return null;
-        }
-
-        if (!TomlDocumentReader.TryParse(
-            contents, DiagnosticCodes.SectionDataUnreadable, file, out TomlDocumentReader document))
+        if (SectionDataFile.Read(files, folioRoot, id, Keys, SectionDataFile.None, SectionDataFile.None, sink) is not { } data)
         {
             return null;
         }
 
-        if (!SchemaVersion.TryRead(document, file, out _))
-        {
-            return null;
-        }
-
-        document.ReportUnknownStructure(RootKeys, None, None, file);
+        TomlDocumentReader document = data.Document;
+        DiagnosticSink file = data.Sink;
 
         long? declared = document.Root.Integer("limit", file);
         int? limit = null;
@@ -62,6 +43,6 @@ internal static class ProjectsConfigParser
             }
         }
 
-        return new ProjectsConfig(document.Root.Boolean("featured", file) ?? false, limit);
+        return new ProjectsSectionEntry(id, document.Root.Boolean("featured", file) ?? false, limit);
     }
 }

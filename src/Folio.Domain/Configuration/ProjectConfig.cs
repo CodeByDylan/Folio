@@ -25,7 +25,7 @@ internal sealed record ProjectConfig(
     IReadOnlyDictionary<string, string> Media,
     IReadOnlyList<LinkEntry> Links,
     IReadOnlyList<RelationEntry> Relations,
-    IReadOnlyList<SectionEntry> Sections)
+    IReadOnlyList<ProseSectionEntry> Sections)
 {
     /// <summary>Gets a configuration for a project that ships no <c>project.toml</c>.</summary>
     public static ProjectConfig Absent { get; } = new(

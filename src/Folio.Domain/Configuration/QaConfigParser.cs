@@ -9,10 +9,6 @@ internal static class QaConfigParser
 {
     private static readonly HashSet<string> EntryKeys = new(StringComparer.Ordinal) { "id" };
 
-    private static readonly HashSet<string> RootKeys = new(StringComparer.Ordinal) { "version" };
-
-    private static readonly HashSet<string> NoTables = new(StringComparer.Ordinal);
-
     private static readonly HashSet<string> Arrays = new(StringComparer.Ordinal) { "entries" };
 
     /// <summary>Reads one Q&amp;A section's declared entries.</summary>
@@ -20,32 +16,16 @@ internal static class QaConfigParser
     /// <param name="folioRoot">The path of the <c>.folio</c> directory.</param>
     /// <param name="id">The section id.</param>
     /// <param name="sink">Where problems are reported.</param>
-    /// <returns>The entry ids in declaration order, or <see langword="null" /> if the file is unusable.</returns>
-    public static IReadOnlyList<string>? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
+    /// <returns>The Q&amp;A section, or <see langword="null" /> if the file is unusable.</returns>
+    public static QaSectionEntry? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
     {
-        string path = HeroConfigParser.PathFor(folioRoot, id);
-        DiagnosticSink file = sink.ForFile(path);
-
-        if (!files.TryGet(path, out ReadOnlyMemory<byte> contents))
-        {
-            file.Warning(
-                DiagnosticCodes.SectionDataUnreadable,
-                $"Section '{id}' declares no '{path}'; it was dropped.");
-            return null;
-        }
-
-        if (!TomlDocumentReader.TryParse(
-            contents, DiagnosticCodes.SectionDataUnreadable, file, out TomlDocumentReader document))
+        if (SectionDataFile.Read(files, folioRoot, id, SectionDataFile.None, SectionDataFile.None, Arrays, sink) is not { } data)
         {
             return null;
         }
 
-        if (!SchemaVersion.TryRead(document, file, out _))
-        {
-            return null;
-        }
-
-        document.ReportUnknownStructure(RootKeys, NoTables, Arrays, file);
+        TomlDocumentReader document = data.Document;
+        DiagnosticSink file = data.Sink;
 
         List<string> entries = [];
         HashSet<string> seen = new(StringComparer.Ordinal);
@@ -76,6 +56,6 @@ internal static class QaConfigParser
             entries.Add(question);
         }
 
-        return entries;
+        return new QaSectionEntry(id, entries);
     }
 }
