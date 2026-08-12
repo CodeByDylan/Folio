@@ -27,8 +27,8 @@ builder.Services.AddOptions<SnapshotStoreOptions>()
 builder.Services.AddOptions<ApiOptions>()
     .BindConfiguration(ApiOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
 
-builder.Services.AddSingleton<ISnapshotProvider, SnapshotProvider>();
-builder.Services.AddSingleton<IRefreshReporter, RefreshReporter>();
+builder.Services.AddSingleton<SnapshotProvider>();
+builder.Services.AddSingleton<RefreshReporter>();
 builder.Services.AddSingleton<RefreshGate<Result<Slice.Response>>>();
 builder.Services.AddSingleton<FolioMetrics>();
 builder.Services.AddSingleton(TimeProvider.System);

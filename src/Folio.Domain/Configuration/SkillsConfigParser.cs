@@ -11,10 +11,6 @@ internal static class SkillsConfigParser
 
     private static readonly HashSet<string> SkillKeys = new(StringComparer.Ordinal) { "id", "level" };
 
-    private static readonly HashSet<string> RootKeys = new(StringComparer.Ordinal) { "version" };
-
-    private static readonly HashSet<string> NoTables = new(StringComparer.Ordinal);
-
     private static readonly HashSet<string> Arrays =
         new(StringComparer.Ordinal) { "categories", "categories.skills" };
 
@@ -23,34 +19,15 @@ internal static class SkillsConfigParser
     /// <param name="folioRoot">The path of the <c>.folio</c> directory.</param>
     /// <param name="id">The section id.</param>
     /// <param name="sink">Where problems are reported.</param>
-    /// <returns>The skills, or <see langword="null" /> if the file is missing or unparseable.</returns>
-    public static SkillsConfig? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
+    /// <returns>The skills section, or <see langword="null" /> if the file is missing or unparseable.</returns>
+    public static SkillsSectionEntry? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
     {
-        string path = HeroConfigParser.PathFor(folioRoot, id);
-        DiagnosticSink file = sink.ForFile(path);
-
-        if (!files.TryGet(path, out ReadOnlyMemory<byte> contents))
-        {
-            file.Warning(
-                DiagnosticCodes.SectionDataUnreadable,
-                $"Section '{id}' declares no '{path}'; it was dropped.");
-            return null;
-        }
-
-        if (!TomlDocumentReader.TryParse(
-            contents, DiagnosticCodes.SectionDataUnreadable, file, out TomlDocumentReader document))
+        if (SectionDataFile.Read(files, folioRoot, id, SectionDataFile.None, SectionDataFile.None, Arrays, sink) is not { } data)
         {
             return null;
         }
 
-        if (!SchemaVersion.TryRead(document, file, out _))
-        {
-            return null;
-        }
-
-        document.ReportUnknownStructure(RootKeys, NoTables, Arrays, file);
-
-        return new SkillsConfig(Categories(document, id, file));
+        return new SkillsSectionEntry(id, Categories(data.Document, id, data.Sink));
     }
 
     private static IReadOnlyList<SkillCategoryEntry> Categories(

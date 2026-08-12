@@ -11,7 +11,7 @@ namespace Folio.Api.Infrastructure;
 internal sealed class RefreshService(
     IServiceScopeFactory scopes,
     IOptionsMonitor<RefreshOptions> options,
-    IRefreshReporter reporter,
+    RefreshReporter reporter,
     FolioMetrics metrics,
     TimeProvider clock,
     ILogger<RefreshService> logger) : BackgroundService

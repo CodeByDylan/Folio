@@ -25,7 +25,7 @@ timer / POST /refresh
                                                                    │
                                               Interlocked.Exchange │
                                                                    ▼
-                                                        ISnapshotProvider
+                                                         SnapshotProvider
                                                                    │
                                                      Folio.Api slices read it
 ```
