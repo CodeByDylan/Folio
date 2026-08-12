@@ -19,18 +19,32 @@ public enum SnapshotStoreKind
     Redis,
 }
 
+/// <summary>Where a build's inputs come from.</summary>
+public enum ContentSourceKind
+{
+    /// <summary>Fetched from GitHub.</summary>
+    GitHub,
+
+    /// <summary>Replayed from a recorded capture, with local working trees laid over it.</summary>
+    Replay,
+}
+
 /// <summary>Everything the ingestion layer needs to be composed.</summary>
 /// <param name="Token">The GitHub token.</param>
 /// <param name="Fetch">How a fetch behaves.</param>
 /// <param name="Store">Which snapshot store to use.</param>
 /// <param name="FilePath">Where the file store writes.</param>
 /// <param name="RedisConnectionString">How to reach Redis.</param>
+/// <param name="Content">Where inputs come from.</param>
+/// <param name="Overlay">The working trees laid over a replayed capture.</param>
 public sealed record IngestionSettings(
-    string Token,
+    string? Token,
     FetchSettings Fetch,
     SnapshotStoreKind Store,
     string FilePath,
-    string? RedisConnectionString);
+    string? RedisConnectionString,
+    ContentSourceKind Content = ContentSourceKind.GitHub,
+    OverlaySettings? Overlay = null);
 
 /// <summary>Composes the ingestion layer, keeping its dependencies out of the host.</summary>
 public static class IngestionRegistration
@@ -68,7 +82,8 @@ public static class IngestionRegistration
 
             return new GitHubClient(new Connection(new ProductHeaderValue("folio"), http))
             {
-                Credentials = new Credentials(settings(provider).Token),
+                Credentials = new Credentials(settings(provider).Token
+                    ?? throw new InvalidOperationException("GitHub:Token is required to reach GitHub.")),
             };
         });
 
@@ -78,16 +93,28 @@ public static class IngestionRegistration
             new PooledMediaProbe(provider.GetRequiredService<IHttpClientFactory>()));
 
         _ = services.AddSingleton(provider => settings(provider).Fetch);
-        _ = services.AddSingleton<IGitHubContentSource, GitHubContentSource>();
 
-        _ = services.AddSingleton<ISnapshotStore>(provider => settings(provider) is { Store: SnapshotStoreKind.Redis }
-            ? new RedisSnapshotStore(
-                provider.GetRequiredService<IConnectionMultiplexer>(),
-                RedisKey,
-                provider.GetRequiredService<ILogger<RedisSnapshotStore>>())
-            : new FileSnapshotStore(
-                settings(provider).FilePath,
-                provider.GetRequiredService<ILogger<FileSnapshotStore>>()));
+        _ = services.AddSingleton<IGitHubContentSource>(provider =>
+            settings(provider) is { Content: ContentSourceKind.Replay, Overlay: { } overlay }
+                ? new ReplayContentSource(overlay, provider.GetRequiredService<ILogger<ReplayContentSource>>())
+                : ActivatorUtilities.CreateInstance<GitHubContentSource>(provider));
+
+        _ = services.AddSingleton<ISnapshotStore>(provider =>
+        {
+            ISnapshotStore store = settings(provider) is { Store: SnapshotStoreKind.Redis }
+                ? new RedisSnapshotStore(
+                    provider.GetRequiredService<IConnectionMultiplexer>(),
+                    RedisKey,
+                    provider.GetRequiredService<ILogger<RedisSnapshotStore>>())
+                : new FileSnapshotStore(
+                    settings(provider).FilePath,
+                    provider.GetRequiredService<ILogger<FileSnapshotStore>>());
+
+            // A replayed build must not write over the capture it was replayed from.
+            return settings(provider).Content is ContentSourceKind.Replay
+                ? new ReadOnlySnapshotStore(store)
+                : store;
+        });
 
         return services;
     }
