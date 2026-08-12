@@ -26,7 +26,7 @@ internal static class FolioEndpoints
 
         _ = routes.MapMethods("/site", GetHead, static async (
             [FromQuery] string? locale,
-            ISnapshotProvider snapshots,
+            SnapshotProvider snapshots,
             IHandler<Site.Request, Site.Response> handler,
             HttpContext context,
             CancellationToken cancellationToken) =>
@@ -41,7 +41,7 @@ internal static class FolioEndpoints
         _ = routes.MapMethods("/pages/{slug}", GetHead, static async (
             string slug,
             [FromQuery] string? locale,
-            ISnapshotProvider snapshots,
+            SnapshotProvider snapshots,
             IHandler<Pages.Request, Pages.Response> handler,
             HttpContext context,
             CancellationToken cancellationToken) =>
@@ -57,7 +57,7 @@ internal static class FolioEndpoints
 
         _ = routes.MapMethods("/projects", GetHead, static async (
             [FromQuery] string? locale,
-            ISnapshotProvider snapshots,
+            SnapshotProvider snapshots,
             IHandler<Projects.ListProjects.Request, Projects.ListProjects.Response> handler,
             HttpContext context,
             CancellationToken cancellationToken) =>
@@ -73,7 +73,7 @@ internal static class FolioEndpoints
         _ = routes.MapMethods("/projects/{slug}", GetHead, static async (
             string slug,
             [FromQuery] string? locale,
-            ISnapshotProvider snapshots,
+            SnapshotProvider snapshots,
             IHandler<Projects.GetProject.Request, Projects.GetProject.Response> handler,
             HttpContext context,
             CancellationToken cancellationToken) =>
@@ -119,7 +119,7 @@ internal static class FolioEndpoints
     }
 
     private static async Task<IResult> Read<TResponse>(
-        ISnapshotProvider snapshots,
+        SnapshotProvider snapshots,
         string? locale,
         HttpContext context,
         Func<SnapshotView, Task<Result<TResponse>>> handle)

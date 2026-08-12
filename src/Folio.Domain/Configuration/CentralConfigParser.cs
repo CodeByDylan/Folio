@@ -278,7 +278,7 @@ internal sealed class CentralConfigParser
     private static bool IsAllowedScheme(SiteLinkType type, Uri url) =>
         url.Scheme is "http" or "https" || (type is SiteLinkType.Email && url.Scheme is "mailto");
 
-    internal static IReadOnlyList<SectionEntry> ReadSections(
+    internal static IReadOnlyList<SectionDeclaration> ReadSections(
         TomlDocumentReader document,
         string path,
         DiagnosticSink sink,
@@ -286,7 +286,7 @@ internal sealed class CentralConfigParser
     {
         // Only site sections are typed; a project's sections are prose by construction.
         bool typed = known.Contains("type");
-        List<SectionEntry> sections = [];
+        List<SectionDeclaration> sections = [];
         HashSet<string> seen = new(StringComparer.Ordinal);
 
         foreach (TomlTableReader entry in document.TableArray(path))
@@ -337,44 +337,36 @@ internal sealed class CentralConfigParser
                 continue;
             }
 
-            sections.Add(new SectionEntry(id, type, name));
+            sections.Add(new SectionDeclaration(id, type, name));
         }
 
         return sections;
     }
 
-    /// <summary>Reads the data file each typed section carries, dropping any section that has none.</summary>
+    /// <summary>Turns each declaration into its case, dropping any whose data cannot be read.</summary>
     private static IReadOnlyList<SectionEntry> ReadSectionData(
-        IReadOnlyList<SectionEntry> sections,
+        IReadOnlyList<SectionDeclaration> declared,
         FileSet central,
         DiagnosticSink sink)
     {
         List<SectionEntry> read = [];
 
-        foreach (SectionEntry section in sections)
+        foreach (SectionDeclaration section in declared)
         {
-            switch (section.Type)
+            SectionEntry? entry = section.Type switch
             {
-                // Prose reads a markdown file and contact declares nothing; the rest carry a data file.
-                case SectionType.Prose:
-                case SectionType.Contact:
-                    read.Add(section);
-                    break;
-                case SectionType.Hero when HeroConfigParser.Read(central, ".folio", section.Id, sink) is { } hero:
-                    read.Add(section with { Hero = hero });
-                    break;
-                case SectionType.Skills when SkillsConfigParser.Read(central, ".folio", section.Id, sink) is { } skills:
-                    read.Add(section with { Skills = skills });
-                    break;
-                case SectionType.Qa when QaConfigParser.Read(central, ".folio", section.Id, sink) is { } questions:
-                    read.Add(section with { Questions = questions });
-                    break;
-                case SectionType.Projects
-                    when ProjectsConfigParser.Read(central, ".folio", section.Id, sink) is { } projects:
-                    read.Add(section with { Projects = projects });
-                    break;
-                default:
-                    break;
+                SectionType.Prose => new ProseSectionEntry(section.Id, section.File!),
+                SectionType.Contact => new ContactSectionEntry(section.Id),
+                SectionType.Hero => HeroConfigParser.Read(central, ".folio", section.Id, sink),
+                SectionType.Skills => SkillsConfigParser.Read(central, ".folio", section.Id, sink),
+                SectionType.Qa => QaConfigParser.Read(central, ".folio", section.Id, sink),
+                SectionType.Projects => ProjectsConfigParser.Read(central, ".folio", section.Id, sink),
+                _ => throw new NotSupportedException($"No parser for {section.Type}."),
+            };
+
+            if (entry is not null)
+            {
+                read.Add(entry);
             }
         }
 

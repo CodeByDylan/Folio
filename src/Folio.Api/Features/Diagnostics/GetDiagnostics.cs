@@ -50,7 +50,7 @@ internal sealed record DiagnosticView(
 /// <param name="Column">The column number.</param>
 internal sealed record PositionView(int Line, int Column);
 
-internal sealed class Handler(ISnapshotProvider snapshots, IRefreshReporter refreshes)
+internal sealed class Handler(SnapshotProvider snapshots, RefreshReporter refreshes)
     : IHandler<Request, Response>
 {
     // Named severities only; Enum.TryParse would also accept "0" and any other underlying value.

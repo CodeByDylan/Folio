@@ -12,9 +12,6 @@ namespace Folio.Domain.Resolution;
 /// <summary>Resolves a complete portfolio from a set of files.</summary>
 public sealed class PortfolioResolver
 {
-    /// <summary>The prefix marking a locale key as an interface string rather than content.</summary>
-    private const string UiPrefix = "ui.";
-
     /// <summary>Resolves the portfolio in every declared locale.</summary>
     /// <param name="central">The central <c>.folio</c> contents.</param>
     /// <param name="repos">One entry per listed project, in display order.</param>
@@ -42,12 +39,13 @@ public sealed class PortfolioResolver
         }
 
         // The site cannot be dropped the way a project can, so the directory is simply never read.
-        _ = ContentDirectoriesAreDeclared(
+        _ = PortfolioAudit.ContentDirectoriesAreDeclared(
             central.Files, ".folio", config.Site.Locales, sink, "its content is ignored.");
 
         SitePath sitePath = new(config.Site.Url);
         MarkdownRewriter rewriter = new(sitePath);
         SectionResolver sectionResolver = new(rewriter);
+        SiteSectionResolver siteSectionResolver = new(rewriter);
         ProjectResolver projectResolver = new(sectionResolver);
 
         HashSet<string> alreadyReported =
@@ -136,13 +134,13 @@ public sealed class PortfolioResolver
         foreach (LocaleTag locale in config.Site.Locales)
         {
             localizations[locale] = ResolveSite(
-                locale, central, config, centralStrings, rewriter, sectionResolver, projectResolver,
+                locale, central, config, centralStrings, sectionResolver, siteSectionResolver, projectResolver,
                 parsed, graph, projectSinks, sink);
         }
 
-        ReportLocaleCoverage(config, central.Files, parsed, centralBundles, sink);
-        ReportLaggingVersions(parsed, sink);
-        ReportOrphanedKeys(config, parsed, centralStrings, projectSinks, sink);
+        PortfolioAudit.ReportLocaleCoverage(config, central.Files, parsed, centralBundles, sink);
+        PortfolioAudit.ReportLaggingVersions(parsed, sink);
+        PortfolioAudit.ReportOrphanedKeys(config, parsed, centralStrings, projectSinks, sink);
 
         IReadOnlyList<Diagnostic> diagnostics = Collate(
             config, parsed, projectSinks, sink.Diagnostics, priorDiagnostics ?? []);
@@ -218,8 +216,8 @@ public sealed class PortfolioResolver
         CentralInput central,
         CentralConfig config,
         LocaleResolver centralStrings,
-        MarkdownRewriter rewriter,
         SectionResolver sectionResolver,
+        SiteSectionResolver siteSectionResolver,
         ProjectResolver projectResolver,
         IReadOnlyList<ParsedProject> parsed,
         RelationGraph graph,
@@ -229,7 +227,7 @@ public sealed class PortfolioResolver
         IReadOnlyList<LocaleTag> chain = [.. centralStrings.Chain(locale)];
 
         IReadOnlyList<ResolvedProseSection> siteSections = sectionResolver.Resolve(
-            config.Site.Sections,
+            [.. config.Site.Sections.OfType<ProseSectionEntry>()],
             central.Files,
             ".folio",
             chain,
@@ -245,38 +243,15 @@ public sealed class PortfolioResolver
         Dictionary<string, ResolvedSection> byId = siteSections.ToDictionary(
             section => section.Id, section => (ResolvedSection)section, StringComparer.Ordinal);
 
-        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Hero is not null))
-        {
-            byId[entry.Id] = ResolveHero(entry, central, config, centralStrings, locale, sink);
-        }
+        SectionContext context = new(central, new SitePath(config.Site.Url), centralStrings, chain, locale);
 
-        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Skills is not null))
+        foreach (SectionEntry entry in config.Site.Sections)
         {
-            byId[entry.Id] = ResolveSkills(entry, centralStrings, locale, sink);
-        }
-
-        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Projects is not null))
-        {
-            byId[entry.Id] = new ResolvedProjectsSection(
-                entry.Id,
-                centralStrings.Resolve($"section.{entry.Id}.heading", locale, sink, "/heading"),
-                entry.Projects!.Featured,
-                entry.Projects.Limit);
-        }
-
-        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Type is SectionType.Contact))
-        {
-            string prefix = $"section.{entry.Id}";
-
-            byId[entry.Id] = new ResolvedContactSection(
-                entry.Id,
-                centralStrings.Resolve($"{prefix}.heading", locale, sink, "/heading"),
-                centralStrings.Resolve($"{prefix}.blurb", locale, sink, "/blurb"));
-        }
-
-        foreach (SectionEntry entry in config.Site.Sections.Where(entry => entry.Questions is not null))
-        {
-            byId[entry.Id] = ResolveQa(entry, central, rewriter, centralStrings, chain, locale, sink);
+            // Prose is already resolved above, with the locale fallback its file needs.
+            if (siteSectionResolver.Resolve(entry, context, sink) is { } resolved)
+            {
+                byId[entry.Id] = resolved;
+            }
         }
 
         return new ResolvedSite(
@@ -301,188 +276,6 @@ public sealed class PortfolioResolver
             Strings(centralStrings, locale, sink));
     }
 
-    private static ResolvedSection ResolveHero(
-        SectionEntry entry,
-        CentralInput central,
-        CentralConfig config,
-        LocaleResolver strings,
-        LocaleTag locale,
-        DiagnosticSink sink)
-    {
-        HeroConfig hero = entry.Hero!;
-        SitePath site = new(config.Site.Url);
-        string prefix = $"section.{entry.Id}";
-
-        List<ResolvedHeroAction> actions = [];
-
-        foreach (HeroActionEntry action in hero.Actions)
-        {
-            // A link to this site is served as a path, the same rule markdown links follow.
-            string url = site.TryMatch(action.Url, out string path) ? path : action.Url.ToString();
-
-            actions.Add(new ResolvedHeroAction(
-                action.Id,
-                url,
-                strings.Resolve(
-                    $"{prefix}.action.{action.Id}",
-                    locale,
-                    sink,
-                    $"/actions/{actions.Count}/label")));
-        }
-
-        List<ResolvedMedia> media = [];
-
-        foreach ((string role, string reference) in hero.Media.OrderBy(item => item.Key, StringComparer.Ordinal))
-        {
-            string path = $".folio/{reference.TrimStart('/')}";
-
-            if (!central.MediaPaths.Contains(path))
-            {
-                sink.Warning(
-                    DiagnosticCodes.MediaNotFound,
-                    $"Media '{role}' on '{entry.Id}' ({reference}) was not found at the pinned commit.");
-                continue;
-            }
-
-            central.MediaSizes.TryGetValue(path, out MediaSize? size);
-
-            if (size is null)
-            {
-                sink.Warning(
-                    DiagnosticCodes.MediaDimensionsUnreadable,
-                    $"Media '{role}' on '{entry.Id}' has no readable image header; dimensions were omitted.");
-            }
-
-            media.Add(new ResolvedMedia(
-                role,
-                RawContentUrl.For(central.Repo, central.PinnedSha, path),
-                size?.Width,
-                size?.Height,
-                strings.Resolve($"{prefix}.media.{role}.alt", locale, sink, $"/media/{media.Count}/alt")));
-        }
-
-        return new ResolvedHeroSection(
-            entry.Id,
-            strings.Resolve($"{prefix}.headline", locale, sink, "/headline"),
-            strings.Resolve($"{prefix}.subheadline", locale, sink, "/subheadline"),
-            actions,
-            media);
-    }
-
-    private static ResolvedSection ResolveSkills(
-        SectionEntry entry,
-        LocaleResolver strings,
-        LocaleTag locale,
-        DiagnosticSink sink)
-    {
-        string prefix = $"section.{entry.Id}";
-        List<ResolvedSkillCategory> categories = [];
-
-        foreach (SkillCategoryEntry category in entry.Skills!.Categories)
-        {
-            int index = categories.Count;
-
-            categories.Add(new ResolvedSkillCategory(
-                category.Id,
-                strings.Resolve(
-                    $"{prefix}.category.{category.Id}",
-                    locale,
-                    sink,
-                    $"/categories/{index}/label"),
-                [
-                    .. category.Skills.Select((skill, position) => new ResolvedSkill(
-                        skill.Id,
-                        skill.Level,
-                        strings.Resolve(
-                            $"{prefix}.skill.{skill.Id}",
-                            locale,
-                            sink,
-                            $"/categories/{index}/skills/{position}/label"))),
-                ]));
-        }
-
-        return new ResolvedSkillsSection(entry.Id, categories);
-    }
-
-    private static ResolvedSection ResolveQa(
-        SectionEntry entry,
-        CentralInput central,
-        MarkdownRewriter rewriter,
-        LocaleResolver strings,
-        IReadOnlyList<LocaleTag> chain,
-        LocaleTag requested,
-        DiagnosticSink sink)
-    {
-        string prefix = $"section.{entry.Id}";
-        IReadOnlyList<string> declared = entry.Questions!;
-        List<ResolvedQuestion> questions = [];
-
-        // Answers follow the same fallback chain a prose body does.
-        (IReadOnlyList<Answer> answers, LocaleTag found, string path) = Answers(entry, central, chain);
-        Dictionary<string, Answer> byId = new(StringComparer.Ordinal);
-        DiagnosticSink file = sink.ForFile(path);
-
-        foreach (Answer answer in answers)
-        {
-            if (!declared.Contains(answer.Id, StringComparer.Ordinal))
-            {
-                file.Warning(
-                    DiagnosticCodes.QaEntryUnknown,
-                    $"'{answer.Id}' answers no declared entry on '{entry.Id}'; it was ignored.");
-                continue;
-            }
-
-            byId[answer.Id] = answer;
-        }
-
-        bool fallback = !found.Equals(requested);
-
-        foreach (string id in declared)
-        {
-            int index = questions.Count;
-
-            if (!byId.TryGetValue(id, out Answer? answer))
-            {
-                file.Warning(
-                    DiagnosticCodes.QaEntryMissing,
-                    $"Entry '{id}' on '{entry.Id}' has no '## {id}' heading; it has no answer.");
-            }
-
-            MarkdownContext context = new(
-                path, central.Repo, central.PinnedSha, new Dictionary<string, string>(StringComparer.Ordinal));
-
-            RewrittenMarkdown? rewritten = answer is null
-                ? null
-                : rewriter.Rewrite(answer.Body, context, file);
-
-            questions.Add(new ResolvedQuestion(
-                id,
-                strings.Resolve($"{prefix}.question.{id}", requested, sink, $"/questions/{index}/question"),
-                rewritten is null ? null : new Localized<string>(rewritten.Body, found, fallback)));
-        }
-
-        return new ResolvedQaSection(entry.Id, questions);
-    }
-
-    /// <summary>Finds the first answers file in the chain and splits it.</summary>
-    private static (IReadOnlyList<Answer> Answers, LocaleTag Locale, string Path) Answers(
-        SectionEntry entry,
-        CentralInput central,
-        IReadOnlyList<LocaleTag> chain)
-    {
-        foreach (LocaleTag locale in chain)
-        {
-            string path = $".folio/content/{locale.Value}/{entry.Id}.md";
-
-            if (central.Files.TryGet(path, out ReadOnlyMemory<byte> contents))
-            {
-                return (AnswerSplitter.Split(Encoding.UTF8.GetString(contents.Span), out _), locale, path);
-            }
-        }
-
-        return ([], chain[^1], $".folio/content/{chain[0].Value}/{entry.Id}.md");
-    }
-
     /// <summary>Resolves every declared interface string for one locale.</summary>
     /// <param name="centralStrings">The central locale bundles.</param>
     /// <param name="locale">The locale being resolved.</param>
@@ -495,9 +288,9 @@ public sealed class PortfolioResolver
     {
         Dictionary<string, Localized<string>> strings = new(StringComparer.Ordinal);
 
-        foreach (string key in centralStrings.KeysUnder(UiPrefix))
+        foreach (string key in centralStrings.KeysUnder(LocaleResolver.UiPrefix))
         {
-            string name = key[UiPrefix.Length..];
+            string name = key[LocaleResolver.UiPrefix.Length..];
 
             if (centralStrings.Resolve(key, locale, sink, $"/strings/{name}") is { } value)
             {
@@ -556,7 +349,7 @@ public sealed class PortfolioResolver
             Copy(diagnostic, projectSink);
         }
 
-        if (!ContentDirectoriesAreDeclared(
+        if (!PortfolioAudit.ContentDirectoriesAreDeclared(
                 repo.Files, folioRoot, config.Site.Locales, projectSink, "the project was dropped."))
         {
             foreach (Diagnostic diagnostic in projectSink.Diagnostics)
@@ -571,201 +364,6 @@ public sealed class PortfolioResolver
             repo.Files, folioRoot, config.Site.Locales, projectSink);
 
         return new ParsedProject(slug, repo, folioRoot, entry, projectConfig, bundles, projectSink);
-    }
-
-    private static bool ContentDirectoriesAreDeclared(
-        FileSet files,
-        string folioRoot,
-        IReadOnlyList<LocaleTag> declared,
-        DiagnosticSink sink,
-        string consequence)
-    {
-        string prefix = $"{folioRoot}/content/";
-        HashSet<string> seen = new(StringComparer.Ordinal);
-        bool valid = true;
-
-        foreach (string path in files.Under($"{folioRoot}/content"))
-        {
-            string rest = path[prefix.Length..];
-            int slash = rest.IndexOf('/', StringComparison.Ordinal);
-            string directory = slash < 0 ? rest : rest[..slash];
-
-            if (!seen.Add(directory))
-            {
-                continue;
-            }
-
-            if (slash < 0)
-            {
-                sink.Error(
-                    DiagnosticCodes.LocaleContentDirUndeclared,
-                    $"content/{rest} sits outside any locale directory; {consequence}");
-                valid = false;
-                continue;
-            }
-
-            if (!LocaleTag.TryParse(directory, out LocaleTag locale)
-                || !declared.Contains(locale)
-                || !string.Equals(locale.Value, directory, StringComparison.Ordinal))
-            {
-                sink.Error(
-                    DiagnosticCodes.LocaleContentDirUndeclared,
-                    $"content/{directory} names no declared locale; {consequence}");
-                valid = false;
-            }
-        }
-
-        return valid;
-    }
-
-    private static void ReportLocaleCoverage(
-        CentralConfig config,
-        FileSet centralFiles,
-        IReadOnlyList<ParsedProject> parsed,
-        IReadOnlyDictionary<LocaleTag, LocaleBundle> centralBundles,
-        DiagnosticSink sink)
-    {
-        foreach (LocaleTag locale in config.Site.Locales)
-        {
-            if (locale.Equals(config.Site.DefaultLocale))
-            {
-                continue;
-            }
-
-            bool anywhere = centralBundles.ContainsKey(locale)
-                || centralFiles.Paths.Any(path =>
-                    path.StartsWith($".folio/content/{locale.Value}/", StringComparison.Ordinal))
-                || parsed.Any(project => project.Locales.ContainsKey(locale))
-                || parsed.Any(project => project.Input.Files.Paths.Any(path =>
-                    path.Contains($"/content/{locale.Value}/", StringComparison.Ordinal)));
-
-            if (!anywhere)
-            {
-                sink.Warning(DiagnosticCodes.LocaleEmpty, $"Locale {locale} has no content anywhere.");
-            }
-        }
-    }
-
-    private static void ReportLaggingVersions(IReadOnlyList<ParsedProject> parsed, DiagnosticSink sink)
-    {
-        string[] lagging =
-        [
-            .. parsed
-                .Where(project => project.Config.Version < SchemaVersion.Current)
-                .Select(project => $"{project.Slug.Value} (version {project.Config.Version})")
-                .Order(StringComparer.Ordinal),
-        ];
-
-        if (lagging.Length > 0)
-        {
-            sink.Info(
-                DiagnosticCodes.SchemaVersionLagging,
-                $"Behind schema version {SchemaVersion.Current}: {string.Join(", ", lagging)}.");
-        }
-    }
-
-    private static void ReportOrphanedKeys(
-        CentralConfig config,
-        IReadOnlyList<ParsedProject> parsed,
-        LocaleResolver centralStrings,
-        IReadOnlyDictionary<Slug, DiagnosticSink> projectSinks,
-        DiagnosticSink sink)
-    {
-        HashSet<string> central = new(StringComparer.Ordinal) { "site.title", "site.tagline" };
-
-        foreach (string key in centralStrings.KeysUnder(UiPrefix))
-        {
-            _ = central.Add(key);
-        }
-
-        foreach (SiteLinkEntry link in config.Site.Links)
-        {
-            _ = central.Add(EnumNames.LinkKey(link.Type));
-        }
-
-        foreach (PageEntry page in config.Site.Pages)
-        {
-            _ = central.Add(EnumNames.PageKey(page.Slug));
-        }
-
-        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Hero is not null))
-        {
-            string prefix = $"section.{section.Id}";
-            _ = central.Add($"{prefix}.headline");
-            _ = central.Add($"{prefix}.subheadline");
-
-            foreach (HeroActionEntry action in section.Hero!.Actions)
-            {
-                _ = central.Add($"{prefix}.action.{action.Id}");
-            }
-
-            foreach (string role in section.Hero.Media.Keys)
-            {
-                _ = central.Add($"{prefix}.media.{role}.alt");
-            }
-        }
-
-        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Projects is not null))
-        {
-            _ = central.Add($"section.{section.Id}.heading");
-        }
-
-        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Type is SectionType.Contact))
-        {
-            _ = central.Add($"section.{section.Id}.heading");
-            _ = central.Add($"section.{section.Id}.blurb");
-        }
-
-        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Questions is not null))
-        {
-            foreach (string id in section.Questions!)
-            {
-                _ = central.Add($"section.{section.Id}.question.{id}");
-            }
-        }
-
-        foreach (SectionEntry section in config.Site.Sections.Where(section => section.Skills is not null))
-        {
-            foreach (SkillCategoryEntry category in section.Skills!.Categories)
-            {
-                _ = central.Add($"section.{section.Id}.category.{category.Id}");
-
-                foreach (SkillEntry skill in category.Skills)
-                {
-                    _ = central.Add($"section.{section.Id}.skill.{skill.Id}");
-                }
-            }
-        }
-
-        foreach (string id in config.Tags.Keys)
-        {
-            _ = central.Add($"tag.{id}");
-        }
-
-        foreach (RelationType type in RelationVocabulary.All)
-        {
-            _ = central.Add($"relation.{RelationVocabulary.Name(type)}");
-        }
-
-        centralStrings.ReportOrphanedKeys(central, sink);
-
-        foreach (ParsedProject project in parsed)
-        {
-            HashSet<string> keys = new(StringComparer.Ordinal) { "project.name", "project.tagline" };
-
-            foreach (LinkEntry link in project.Config.Links)
-            {
-                _ = keys.Add(EnumNames.LinkKey(link.Type));
-            }
-
-            foreach (string role in project.Config.Media.Keys)
-            {
-                _ = keys.Add($"media.{role}.alt");
-            }
-
-            new LocaleResolver(project.Locales, config.Site.DefaultLocale)
-                .ReportOrphanedKeys(keys, projectSinks[project.Slug]);
-        }
     }
 
     private static void Copy(Diagnostic diagnostic, DiagnosticSink sink)

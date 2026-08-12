@@ -79,9 +79,9 @@ mocking library; an imaging library; a mediator or dispatcher.
 - No ports, no async, no injected fetcher. The caller supplies a complete file set.
 - Phase one resolves each project independently. Phase two applies only the rules that need the whole
   set: slug uniqueness, relation inversion, ordering. Nothing else reaches across projects.
-- Collaborators in Domain are concrete sealed types, not interfaces. An interface belongs where a
-  second implementation exists or a boundary must be stubbed: `ISnapshotStore`, `IGitHubContentSource`
-  and `IMediaProbe` in Ingestion, `ISnapshotProvider` and `IRefreshReporter` in the API. Domain has none.
+- Collaborators are concrete sealed types, not interfaces. An interface belongs where a second
+  implementation exists or a boundary must be stubbed: `ISnapshotStore`, `IGitHubContentSource` and
+  `IMediaProbe` in Ingestion. Domain and the API have none.
 - Everything is immutable: `sealed record`, `init` or constructor-set. There are no entities and no
   identity equality. A project's identity is its slug.
 - A slug is lowercase letters, digits and hyphens, not starting or ending with one. An authored slug
@@ -103,11 +103,23 @@ mocking library; an imaging library; a mediator or dispatcher.
 - Site sections are declared once and composed into pages by reference. A section's `type` says what
   renders it and defaults to `prose`; project sections are prose by construction and carry no `type`.
   A page names a slug and may claim `home`; it never names a route, because the format carries no
-  frontend URL patterns. Adding a section type is a row in `EnumNames`, a parser and a wire shape.
+  frontend URL patterns. Adding a section type is a row in `EnumNames`, a parser, a case in
+  `SectionKeys.All`, a case in `SiteSectionResolver.Resolve` and a wire shape.
 - Prose is the only type whose content is a markdown file. Every other type reads
   `sections/<id>.toml` for its locale-invariant structure and `section.<id>.*` locale keys for its
   words, so a translator never sees structure. A type with no structure to declare, such as
   `contact`, reads no data file.
+- A section's data file is opened by `SectionDataFile.Read`, never by a parser reaching for the path
+  itself. It owns the path shape, the missing-file diagnostic, the schema version and the
+  unknown-structure report; a parser declares only the keys, tables and arrays its type names.
+- `SectionEntry` is a closed union in the same shape as `ResolvedSection`: one sealed record per type,
+  never a base carrying another type's fields. `SectionDeclaration` is the pre-data intermediate that
+  carries only what `site.toml` states, before a parser turns it into a union case.
+- Every `section.<id>.*` key shape is stated once, in `SectionKeys`. Resolution and the orphan audit
+  both read it, so a key the resolver requests can never go missing from the audit's allowlist.
+- Resolving one section needs no portfolio: `SiteSectionResolver.Resolve(entry, context, sink)` takes
+  a `SectionContext` and returns the union case. Likewise the input checks live in `PortfolioAudit`
+  and run against a bare `FileSet`.
 - `ResolvedSection` is a closed union: one sealed record per type, deriving from an abstract base
   carrying only `Id` and `Type`. A section never holds a field belonging to another type. C# cannot
   prove a class hierarchy exhaustive, so each `switch` over the union ends in a throwing default: an

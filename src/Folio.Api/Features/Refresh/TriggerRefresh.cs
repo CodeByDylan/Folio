@@ -27,8 +27,8 @@ internal sealed record Response(string SnapshotId, DateTimeOffset BuiltAt, int P
 internal sealed class Handler(
     IGitHubContentSource source,
     ISnapshotStore store,
-    ISnapshotProvider snapshots,
-    IRefreshReporter reporter,
+    SnapshotProvider snapshots,
+    RefreshReporter reporter,
     RefreshGate<Result<Response>> gate,
     FolioMetrics metrics,
     IOptionsMonitor<RefreshOptions> options,

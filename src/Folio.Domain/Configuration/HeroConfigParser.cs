@@ -13,50 +13,24 @@ internal static class HeroConfigParser
 
     private static readonly HashSet<string> ActionKeys = new(StringComparer.Ordinal) { "id", "url" };
 
-    private static readonly HashSet<string> RootKeys = new(StringComparer.Ordinal) { "version" };
-
     private static readonly HashSet<string> Tables = new(StringComparer.Ordinal) { "media" };
 
     private static readonly HashSet<string> Arrays = new(StringComparer.Ordinal) { "actions" };
-
-    /// <summary>Builds the path a section's data file sits at.</summary>
-    /// <param name="folioRoot">The path of the <c>.folio</c> directory.</param>
-    /// <param name="id">The section id.</param>
-    /// <returns>The repo-relative path.</returns>
-    public static string PathFor(string folioRoot, string id) => $"{folioRoot}/sections/{id}.toml";
 
     /// <summary>Reads one hero's data.</summary>
     /// <param name="files">The central file set.</param>
     /// <param name="folioRoot">The path of the <c>.folio</c> directory.</param>
     /// <param name="id">The section id.</param>
     /// <param name="sink">Where problems are reported.</param>
-    /// <returns>The hero, or <see langword="null" /> if its file is missing or unparseable.</returns>
-    public static HeroConfig? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
+    /// <returns>The hero section, or <see langword="null" /> if its file is missing or unparseable.</returns>
+    public static HeroSectionEntry? Read(FileSet files, string folioRoot, string id, DiagnosticSink sink)
     {
-        string path = PathFor(folioRoot, id);
-        DiagnosticSink file = sink.ForFile(path);
-
-        if (!files.TryGet(path, out ReadOnlyMemory<byte> contents))
-        {
-            file.Warning(
-                DiagnosticCodes.SectionDataUnreadable,
-                $"Section '{id}' declares no '{path}'; it was dropped.");
-            return null;
-        }
-
-        if (!TomlDocumentReader.TryParse(contents, DiagnosticCodes.SectionDataUnreadable, file, out TomlDocumentReader document))
+        if (SectionDataFile.Read(files, folioRoot, id, SectionDataFile.None, Tables, Arrays, sink) is not { } data)
         {
             return null;
         }
 
-        if (!SchemaVersion.TryRead(document, file, out _))
-        {
-            return null;
-        }
-
-        document.ReportUnknownStructure(RootKeys, Tables, Arrays, file);
-
-        return new HeroConfig(Actions(document, id, file), Media(document, file));
+        return new HeroSectionEntry(id, Actions(data.Document, id, data.Sink), Media(data.Document, data.Sink));
     }
 
     private static IReadOnlyList<HeroActionEntry> Actions(

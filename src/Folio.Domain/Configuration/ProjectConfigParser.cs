@@ -93,7 +93,10 @@ internal sealed class ProjectConfigParser
             media,
             ReadLinks(document, file),
             ReadRelations(document, file),
-            CentralConfigParser.ReadSections(document, "sections", file, SectionKeys));
+            [
+                .. CentralConfigParser.ReadSections(document, "sections", file, SectionKeys)
+                    .Select(section => new ProseSectionEntry(section.Id, section.File!)),
+            ]);
 
         return true;
     }
