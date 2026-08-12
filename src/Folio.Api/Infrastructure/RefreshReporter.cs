@@ -25,25 +25,15 @@ internal sealed record RefreshReport(
     IReadOnlyList<Diagnostic> Diagnostics);
 
 /// <summary>Holds the outcome of the last rebuild attempt, which may be newer than the snapshot.</summary>
-internal interface IRefreshReporter
-{
-    /// <summary>Gets the last attempt, or <see langword="null" /> before one has run.</summary>
-    RefreshReport? Last { get; }
-
-    /// <summary>Records an attempt.</summary>
-    /// <param name="report">What the attempt produced.</param>
-    void Record(RefreshReport report);
-}
-
-/// <inheritdoc />
-internal sealed class RefreshReporter : IRefreshReporter
+internal sealed class RefreshReporter
 {
     private RefreshReport? _last;
 
-    /// <inheritdoc />
+    /// <summary>Gets the last attempt, or <see langword="null" /> before one has run.</summary>
     public RefreshReport? Last => Volatile.Read(ref _last);
 
-    /// <inheritdoc />
+    /// <summary>Records an attempt.</summary>
+    /// <param name="report">What the attempt produced.</param>
     public void Record(RefreshReport report)
     {
         ArgumentNullException.ThrowIfNull(report);

@@ -33,7 +33,7 @@ internal static class Health
 }
 
 /// <summary>Reports unready until the first snapshot has been built.</summary>
-internal sealed class SnapshotHealthCheck(ISnapshotProvider snapshots) : IHealthCheck
+internal sealed class SnapshotHealthCheck(SnapshotProvider snapshots) : IHealthCheck
 {
     /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(

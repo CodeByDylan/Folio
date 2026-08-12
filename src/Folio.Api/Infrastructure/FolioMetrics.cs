@@ -17,7 +17,7 @@ internal sealed class FolioMetrics
     /// <param name="factory">The meter factory.</param>
     /// <param name="snapshots">The snapshot being served.</param>
     /// <param name="clock">The clock snapshot age is measured against.</param>
-    public FolioMetrics(IMeterFactory factory, ISnapshotProvider snapshots, TimeProvider clock)
+    public FolioMetrics(IMeterFactory factory, SnapshotProvider snapshots, TimeProvider clock)
     {
         ArgumentNullException.ThrowIfNull(factory);
 

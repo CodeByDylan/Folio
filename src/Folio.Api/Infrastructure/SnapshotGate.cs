@@ -23,7 +23,7 @@ internal static class SnapshotGate
     /// <param name="locale">The raw <c>locale</c> query value, if any.</param>
     /// <param name="resource">The resource being served, folded into the validator.</param>
     /// <returns>The view to serve, or the failure that prevents it.</returns>
-    public static Result<SnapshotView> Open(ISnapshotProvider snapshots, string? locale, string resource)
+    public static Result<SnapshotView> Open(SnapshotProvider snapshots, string? locale, string resource)
     {
         Snapshot? snapshot = snapshots.Current;
 
