@@ -16,6 +16,10 @@ using Slice = Folio.Api.Features.Refresh.TriggerRefresh;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+_ = builder.Configuration
+    .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 builder.AddTelemetry();
 
 builder.Services.AddOptions<GitHubOptions>()
@@ -26,6 +30,9 @@ builder.Services.AddOptions<SnapshotStoreOptions>()
     .BindConfiguration(SnapshotStoreOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
 builder.Services.AddOptions<ApiOptions>()
     .BindConfiguration(ApiOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddOptions<ContentOptions>()
+    .BindConfiguration(ContentOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<GitHubOptions>, GitHubOptionsValidator>();
 
 builder.Services.AddSingleton<SnapshotProvider>();
 builder.Services.AddSingleton<RefreshReporter>();
@@ -33,11 +40,14 @@ builder.Services.AddSingleton<RefreshGate<Result<Slice.Response>>>();
 builder.Services.AddSingleton<FolioMetrics>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddFolioHealthChecks();
+string contentRoot = builder.Environment.ContentRootPath;
+
 builder.Services.AddFolioIngestion(provider =>
 {
     GitHubOptions github = provider.GetRequiredService<IOptions<GitHubOptions>>().Value;
     RefreshOptions refresh = provider.GetRequiredService<IOptions<RefreshOptions>>().Value;
     SnapshotStoreOptions store = provider.GetRequiredService<IOptions<SnapshotStoreOptions>>().Value;
+    ContentOptions content = provider.GetRequiredService<IOptions<ContentOptions>>().Value;
 
     return new IngestionSettings(
         github.Token,
@@ -51,7 +61,9 @@ builder.Services.AddFolioIngestion(provider =>
             refresh.MaxTotalBytes),
         store.Mode is SnapshotStoreMode.Redis ? SnapshotStoreKind.Redis : SnapshotStoreKind.File,
         store.FilePath,
-        store.RedisConnectionString);
+        store.RedisConnectionString,
+        content.Mode is ContentMode.Replay ? ContentSourceKind.Replay : ContentSourceKind.GitHub,
+        new OverlaySettings(content.Resolve(contentRoot), refresh.MaxFileBytes));
 });
 builder.Services.AddHostedService<RefreshService>();
 
@@ -134,6 +146,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(forwarded =>
 });
 
 WebApplication app = builder.Build();
+
+if (app.Services.GetRequiredService<IOptions<ContentOptions>>().Value.Mode is ContentMode.Replay
+    && !app.Environment.IsDevelopment())
+{
+    throw new InvalidOperationException(
+        $"Content:Mode is Replay, which is only allowed in Development (this is {app.Environment.EnvironmentName}).");
+}
 
 // So the rate limiter partitions on the real client, not the proxy — only when a proxy is trusted.
 if (app.Services.GetRequiredService<IOptions<ApiOptions>>().Value.TrustForwardedHeaders)

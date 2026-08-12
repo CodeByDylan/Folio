@@ -8,9 +8,8 @@ public sealed class GitHubOptions
     /// <summary>The configuration section these options bind to.</summary>
     public const string SectionName = "GitHub";
 
-    /// <summary>Gets the fine-grained personal access token.</summary>
-    [Required(AllowEmptyStrings = false)]
-    public required string Token { get; init; }
+    /// <summary>Gets the fine-grained personal access token. Required unless content is replayed.</summary>
+    public string? Token { get; init; }
 
     /// <summary>Gets the repository holding the central <c>.folio</c>, as <c>owner/name</c>.</summary>
     [Required(AllowEmptyStrings = false)]
