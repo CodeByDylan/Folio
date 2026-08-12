@@ -471,3 +471,6 @@ $RECYCLE.BIN/
 
 # Jetbrains
 .idea/
+
+folio-inputs.json
+appsettings.Local.json

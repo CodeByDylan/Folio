@@ -105,6 +105,9 @@ public static class DiagnosticCodes
     /// <summary>A typed section's <c>sections/&lt;id&gt;.toml</c> is missing or unparseable.</summary>
     public const string SectionDataUnreadable = "section.data_unreadable";
 
+    /// <summary>An overlay directory holds no <c>.folio</c>, so the capture was used instead.</summary>
+    public const string OverlayRootInvalid = "overlay.root_invalid";
+
     /// <summary>A declared question has no heading in one locale's answers file.</summary>
     public const string QaEntryMissing = "qa.entry_missing";
 

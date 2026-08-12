@@ -20,6 +20,9 @@ public sealed class DiagnosticCoverageTests
         // Folio.Api.Tests: RefreshDiagnosticsTests. A failed first refresh has no snapshot to carry them.
         DiagnosticCodes.RefreshAbandoned,
         DiagnosticCodes.RefreshRateLimitInsufficient,
+
+        // Folio.Ingestion.Tests: ReplayContentSourceTests.
+        DiagnosticCodes.OverlayRootInvalid,
     ];
 
     /// <summary>Codes the resolver implements but cannot emit while only one schema version exists.</summary>
