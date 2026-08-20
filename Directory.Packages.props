@@ -24,7 +24,7 @@
     <ItemGroup Label="Extensions">
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
         <!-- Pinned above the 2.0.0 that Microsoft.AspNetCore.OpenApi drags in: GHSA-v5pm-xwqc-g5wc. -->
-        <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
+        <PackageVersion Include="Microsoft.OpenApi" Version="3.10.2" />
         <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.9.0" />
         <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" />
         <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.11" />
